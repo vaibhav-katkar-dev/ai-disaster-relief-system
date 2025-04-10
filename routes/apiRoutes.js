@@ -119,38 +119,72 @@ router.get('/gemini', async (req, res) => {
   
 
 // 🐦 Twitter (X) API - Search Tweets
+// 🐦 Twitter (X) API - Recent Tweets by Keyword
 router.get('/twitter/:keyword', async (req, res) => {
-  const keyword = req.params.keyword;
+    const keyword = req.params.keyword;
+    try {
+      const response = await axios.get(
+        `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(keyword)}&max_results=10&tweet.fields=created_at,author_id`,
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.TWITTER_BEARER}`,
+          },
+        }
+      );
+  
+      const tweets = response.data.data?.map(tweet => ({
+        id: tweet.id,
+        text: tweet.text,
+        author: tweet.author_id,
+        date: tweet.created_at,
+      })) || [];
+  
+      console.log("🐦 Tweets:", tweets);
+      res.json({ keyword, tweets });
+    } catch (err) {
+      console.error('❌ Twitter API Error:', err.response?.data || err.message);
+      res.status(500).json({ error: 'Twitter API failed' });
+    }
+  });
+  
+  const Parser = require('rss-parser'); // Make sure this line exists
+  const parser = new Parser({
+    headers: { 'User-Agent': 'Mozilla/5.0 (AI-Relief-Agent)' },
+  });
+  
 
-  try {
-    const response = await axios.get(
-      `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(keyword)}&max_results=5&tweet.fields=created_at,author_id`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.TWITTER_BEARER}`,
-        },
-      }
-    );
-
-    const tweets = response.data.data?.map(tweet => ({
-      id: tweet.id,
-      text: tweet.text,
-      author: tweet.author_id,
-      date: tweet.created_at,
-    })) || [];
-
-    console.log("🐦 Tweets Found:", tweets);
-    res.json({ keyword, tweets });
-    
-  } catch (err) {
-      
-    if (err.response?.status === 429) {
-        return res.status(429).json({ error: 'Rate limit exceeded. Please try again later.' });
-      }
-      
-    console.error('❌ Twitter API Error:', err.response?.data || err.message);
-    res.status(500).json({ error: 'Twitter API failed' });
-  }
-});
-
+  router.get('/news/:keyword', async (req, res) => {
+    const keyword = req.params.keyword.toLowerCase();
+    const url = `https://news.google.com/rss/search?q=${encodeURIComponent(keyword)}`;
+  
+    try {
+      const feed = await parser.parseURL(url);
+      const articles = (feed.items || []).map(item => ({
+        title: item.title || '',
+        link: item.link || '',
+        date: item.pubDate || '',
+        summary: item.contentSnippet || '',
+        source: 'Google News',
+      }));
+  
+      console.log(`📥 ${articles.length} articles found for: ${keyword}`);
+      articles.forEach((article, index) => {
+        console.log(`\n📰 Article ${index + 1}:`);
+        console.log('Title:', article.title);
+        console.log('Link:', article.link);
+        console.log('Date:', article.date);
+        console.log('Summary:', article.summary);
+        console.log('Source:', article.source);
+      });
+  
+      res.json({
+        keyword,
+        articles: articles.slice(0, 10),
+      });
+    } catch (err) {
+      console.error('❌ News fetch error:', err.message);
+      res.status(500).json({ error: 'News search failed' });
+    }
+  });
+  
 module.exports = router;
