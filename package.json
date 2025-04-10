@@ -1,0 +1,17 @@
+{
+  "name": "ai-disaster-relief-system",
+  "version": "1.0.0",
+  "description": "AI-powered system for smart disaster relief coordination. Uses free tools like Gemini API to analyze reports, prioritize incidents, and suggest optimal resource allocation—no paid APIs or credit cards needed. Built with Node.js for efficient and scalable deployment.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "path": "^0.12.7"
+  }
+}
