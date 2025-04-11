@@ -42,48 +42,176 @@ app.get("/",(req,res)=>{
 //     res.json({ status: "Location received", lat, lon });
 //   });
   
-  
+const { marked } = require("marked"); // add this at the top of the file
 
-// 📍 IP Location API
 app.get('/location', async (req, res) => {
-    try {
-        const response = await axios.get('http://ip-api.com/json');
-      
-        const data = {
-          city: response.data.city,
-          region: response.data.regionName,
-          country: response.data.country,
-          lat: response.data.lat,
-          lon: response.data.lon,
-        };
-      
-        if(data.city){
-            weather(data.city);
-        }
-        news('Pune', 'Flood');
-        weather("satara");
-        // gemini();
-        // twitter();
-        console.log("📍 Location Data:", data);
-      
-        // ✅ Return here to prevent further execution
-        return res.render("requestHelp.ejs", { data });
-      
-      } catch (error) {
-        console.error("❌ Error fetching location:", error);
-      
-        // Only send this if a response hasn’t already been sent
-        if (!res.headersSent) {
-          return res.status(500).send("Failed to fetch location.");
-        }
-      }
-      
-const { lat, lon } = req.body;
-console.log("📍 Received location from frontend:", lat, lon);
-res.json({ status: "Location received", lat, lon });
+  try {
+    const response = await axios.get('http://ip-api.com/json');
+
+    const disaster = "flood";
+    const data = {
+      city: response.data.city,
+      region: response.data.regionName,
+      country: response.data.country,
+      lat: response.data.lat,
+      lon: response.data.lon,
+    };
+
+    const newsData = await news(data.city, disaster);
+    const weatherData = await weather(data.city);
+    const tweets = await twitter(disaster, data.lat, data.lon, "10km");
+
+    // Get Gemini AI response
+    const raw = await gemini({ location: data, tweets, news: newsData, weather: weatherData });
+    console.log("🌐 RAW Response:", raw);
+
+    let markdownRaw;
+
+    // If it's a string, process it as markdown
+    if (typeof raw.suggestions === "string") {
+      markdownRaw = raw.suggestions;
+    } else {
+      markdownRaw = JSON.stringify(raw, null, 2); // fallback to displaying JSON
+    }
+
+    // Convert Markdown to HTML
+    const htmlOutput = marked.parse(markdownRaw);
+
+    // Render the view with HTML content
+    return res.render("Report.ejs", { data, jdata: htmlOutput });
+
+  } catch (error) {
+    console.error("❌ Error in /location:", error.message);
+    if (!res.headersSent) {
+      return res.status(500).send("Internal Server Error");
+    }
+  }
 });
 
-async function weather(city){
+
+async function gemini({ location, tweets, news, weather }) {
+  // 🧪 Simulated fallback data
+  const simulatedTweets = [
+    "Water levels rising rapidly near Sinhagad Road.",
+    "Multiple vehicles stuck in Kothrud underpass due to flooding!",
+    "Pune University Road completely waterlogged. Avoid the route.",
+    "Rain hasn't stopped since last night, Hadapsar residents seek help.",
+    "Low-lying areas near Deccan flooded – people stranded on rooftops."
+  ];
+
+  const simulatedWeather = [
+    {
+      temperature: "22°C",
+      condition: "Heavy Rain",
+      humidity: "95%",
+      windSpeed: "12 km/h",
+      alert: "Red alert issued by IMD for Pune region"
+    }
+  ];
+
+  const simulatedNews = [
+    "Floods wreak havoc in Pune as rains continue unabated.",
+    "Local authorities deploy rescue teams in low-lying areas.",
+    "Schools and colleges shut across Pune district.",
+    "Power outages in multiple areas due to flooding.",
+    "IMD forecasts more rainfall for the next 48 hours."
+  ];
+
+  const simulatedVolunteers = [
+    { name: "Amit", skill: "First Aid", lat: 18.5204, lon: 73.8567 },
+    { name: "Sneha", skill: "Food Distribution", lat: 18.509, lon: 73.855 },
+    { name: "Ravi", skill: "Rescue Operations", lat: 18.5301, lon: 73.8702 }
+  ];
+
+  const simulatedNGOs = [
+    { name: "Relief Pune", contact: "9876543210", area: "Kothrud" },
+    { name: "Hope Foundation", contact: "9765432109", area: "Hadapsar" }
+  ];
+
+  const simulatedRiskZones = [
+    { zone: "Sinhagad Road", riskLevel: "High" },
+    { zone: "Deccan", riskLevel: "Medium" },
+    { zone: "Kothrud", riskLevel: "High" },
+    { zone: "Wakad", riskLevel: "Low" }
+  ];
+
+  // 🧠 Use real or simulated data (fallback logic)
+  const safeTweets = Array.isArray(tweets) && tweets.length > 0 ? tweets : simulatedTweets;
+  const safeWeather = Array.isArray(weather) && weather.length > 0 ? weather : simulatedWeather;
+  const safeNews = Array.isArray(news) && news.length > 0 ? news : simulatedNews;
+
+  const safeVolunteers = simulatedVolunteers; // Extend for real-time logic later
+  const safeNGOs = simulatedNGOs;
+  const safeRiskZones = simulatedRiskZones;
+
+  // 🧾 Format data
+  const formattedTweets = safeTweets.join("\n");
+  const formattedWeather = safeWeather.map(w => 
+    `Temperature: ${w.temperature}, Condition: ${w.condition}, Humidity: ${w.humidity}, Wind: ${w.windSpeed}, Alert: ${w.alert}`
+  ).join("\n");
+
+  const formattedNews = safeNews.map((n, i) => `News ${i + 1}: ${n.title || n}`).join("\n");
+  const formattedVolunteers = JSON.stringify(safeVolunteers, null, 2);
+  const formattedNGOs = JSON.stringify(safeNGOs, null, 2);
+  const formattedRiskZones = JSON.stringify(safeRiskZones, null, 2);
+
+  // 🪄 Gemini Prompt
+  const prompt = `
+📍 **Disaster Situation Analysis: ${location.city || "Pune"} (Flood)**
+
+🌧️ **Weather Data**:
+${formattedWeather}
+
+📲 **Social Media Signals (Tweets)**:
+${formattedTweets}
+
+🗞️ **News Reports**:
+${formattedNews}
+
+🧑‍🤝‍🧑 **Volunteer Info**:
+${formattedVolunteers}
+
+🏥 **NGO Support**:
+${formattedNGOs}
+
+🧭 **Flood Risk Zones**:
+${formattedRiskZones}
+
+---
+
+Please provide:
+1. 🔍 Real-Time Damage Assessment  
+2. 🚚 Optimal Aid Distribution Routes  
+3. 🧑‍🤝‍🧑 Volunteer and NGO Coordination  
+4. 🔮 Predictive Risk Modeling  
+5. 📊 Overall Model Confidence (0–100%)  
+6. 🧠 Short reasoning for each insight.
+`;
+
+  try {
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      {
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt }]
+          }
+        ]
+      }
+    );
+
+    const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No suggestions.";
+    return { suggestions: text };
+
+  } catch (err) {
+    console.error("❌ Gemini API Error:", err.response?.data || err.message);
+    return { suggestions: "{}" };
+  }
+}
+
+
+ async function weather(city){
     try {
         // const city = city;
         const response = await axios.get(
@@ -96,7 +224,7 @@ async function weather(city){
           condition: response.data.current.condition.text,
           wind_kph: response.data.current.wind_kph,
         };
-        console.log("🌦️ Weather Data:", data);
+        // console.log("🌦️ Weather Data:", data);
         // res.json(data);
       } catch (err) {
         console.error("❌ Weather API Error:", err.message);
@@ -106,76 +234,35 @@ async function weather(city){
 
 
 
-async function gemini(){
-    try {
-        // Collect location and weather data first
-        const [locRes, weatherRes] = await Promise.all([
-          axios.get('http://ip-api.com/json'),
-          axios.get(`http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHER_API_KEY}&q=Mumbai`),
-        ]);
-    
-        const location = locRes.data.city || 'Mumbai';
-        const tweets = "Heavy waterlogging at CST, Need food near Andheri";
-        const news = "Water rising in low-lying areas";
-        const weather = weatherRes.data.current;
-    
-        const prompt = `Analyze this data and suggest AI-based disaster relief actions:\n
-    City: ${location}
-    Disaster: Flood
-    Tweets: ${tweets}
-    Weather: Rainfall ${weather.precip_mm}mm, Wind ${weather.wind_kph}kph
-    News: ${news}
-    Latitude: ${locRes.data.lat}, Longitude: ${locRes.data.lon}`;
-    
-        const response = await axios.post(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-          {
-            contents: [
-              {
-                role: 'user',
-                parts: [{ text: prompt }],
-              },
-            ],
-          }
-        );
-    
-        const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No suggestions.";
-        const data = { suggestions: text };
-    
-        console.log("🧠 Gemini AI Suggestions:", data);
-        // res.json(data);
-      } catch (err) {
-        console.error("❌ Gemini API Error:", err.response?.data || err.message);
-        // res.status(500).json({ error: 'Gemini Flash API failed' });
+
+async function twitter(keyword, latitude, longitude, radius = '10km', res) {
+  try {
+    const geoQuery = `point_radius:[${longitude} ${latitude} ${radius}]`;
+
+    const response = await axios.get(
+      `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(`${keyword} ${geoQuery}`)}&max_results=10&tweet.fields=created_at,author_id,geo`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.TWITTER_BEARER}`,
+        },
       }
+    );
+
+    const tweets = response.data.data?.map(tweet => ({
+      id: tweet.id,
+      text: tweet.text,
+      author: tweet.author_id,
+      date: tweet.created_at,
+    })) || [];
+
+    // console.log("🕎 Tweets:", tweets);
+    res.json({ keyword, tweets });
+  } catch (err) {
+    console.error('❌ Twitter API Error:', err.response?.data || err.message);
+    // res.status(500).json({ error: 'Twitter API failed' });
+  }
 }
 
-
-async function twitter(keyword) {
-    try {
-        const response = await axios.get(
-          `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(keyword)}&max_results=10&tweet.fields=created_at,author_id`,
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.TWITTER_BEARER}`,
-            },
-          }
-        );
-    
-        const tweets = response.data.data?.map(tweet => ({
-          id: tweet.id,
-          text: tweet.text,
-          author: tweet.author_id,
-          date: tweet.created_at,
-        })) || [];
-    
-        console.log("🕎 Tweets:", tweets);
-        res.json({ keyword, tweets });
-      } catch (err) {
-        console.error('❌ Twitter API Error:', err.response?.data || err.message);
-        // res.status(500).json({ error: 'Twitter API failed' });
-      }
-}
 
 
 
@@ -204,14 +291,14 @@ async function news(city, disaster) {
         }));
   
       console.log(`🗺️ Showing latest ${articles.length} news articles about "${disaster}" in "${city}"`);
-      articles.forEach(article => {
-        console.log(`\n📰 ${article.index}. ${article.title}`);
-        console.log(`📅 ${article.date}`);
-        console.log(`🔗 ${article.link}`);
-        console.log(`📝 ${article.summary}\n`);
-      });
+      // articles.forEach(article => {
+      //   console.log(`\n📰 ${article.index}. ${article.title}`);
+      //   console.log(`📅 ${article.date}`);
+      //   console.log(`🔗 ${article.link}`);
+      //   console.log(`📝 ${article.summary}\n`);
+      // });
   
-      
+      console.log(articles);
       return articles;
     } catch (err) {
       console.error('❌ Error fetching city-specific news:', err.message);
@@ -227,178 +314,3 @@ app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
 
-
-// // ------------------------------------------------------===
-// // 📰 News via RSS Feed
-// app.get('/news/:keyword', async (req, res) => {
-//     const keyword = req.params.keyword.toLowerCase();
-//     const url = `https://news.google.com/rss/search?q=${encodeURIComponent(keyword)}`;
-  
-//     try {
-//       const feed = await parser.parseURL(url);
-//       const articles = (feed.items || []).map(item => ({
-//         title: item.title || '',
-//         link: item.link || '',
-//         date: item.pubDate || '',
-//         summary: item.contentSnippet || '',
-//         source: 'Google News',
-//       }));
-  
-//       console.log(`📅 ${articles.length} articles found for: ${keyword}`);
-//       res.json({
-//         keyword,
-//         articles: articles.slice(0, 10),
-//       });
-//     } catch (err) {
-//       console.error('❌ News fetch error:', err.message);
-//       res.status(500).json({ error: 'News search failed' });
-//     }
-//   });
-
-
-  
-// // 🕎 Twitter Feed (Recent Tweets)
-// app.get('/twitter/:keyword', async (req, res) => {
-//     const keyword = req.params.keyword;
-//     try {
-//       const response = await axios.get(
-//         `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(keyword)}&max_results=10&tweet.fields=created_at,author_id`,
-//         {
-//           headers: {
-//             Authorization: `Bearer ${process.env.TWITTER_BEARER}`,
-//           },
-//         }
-//       );
-  
-//       const tweets = response.data.data?.map(tweet => ({
-//         id: tweet.id,
-//         text: tweet.text,
-//         author: tweet.author_id,
-//         date: tweet.created_at,
-//       })) || [];
-  
-//       console.log("🕎 Tweets:", tweets);
-//       res.json({ keyword, tweets });
-//     } catch (err) {
-//       console.error('❌ Twitter API Error:', err.response?.data || err.message);
-//       res.status(500).json({ error: 'Twitter API failed' });
-//     }
-//   });
-
-
-//   // 🧠 Gemini AI (Disaster Relief Suggestions)
-// app.get('/gemini', async (req, res) => {
-//     try {
-//       // Collect location and weather data first
-//       const [locRes, weatherRes] = await Promise.all([
-//         axios.get('http://ip-api.com/json'),
-//         axios.get(`http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHER_API_KEY}&q=Mumbai`),
-//       ]);
-  
-//       const location = locRes.data.city || 'Mumbai';
-//       const tweets = "Heavy waterlogging at CST, Need food near Andheri";
-//       const news = "Water rising in low-lying areas";
-//       const weather = weatherRes.data.current;
-  
-//       const prompt = `Analyze this data and suggest AI-based disaster relief actions:\n
-//   City: ${location}
-//   Disaster: Flood
-//   Tweets: ${tweets}
-//   Weather: Rainfall ${weather.precip_mm}mm, Wind ${weather.wind_kph}kph
-//   News: ${news}
-//   Latitude: ${locRes.data.lat}, Longitude: ${locRes.data.lon}`;
-  
-//       const response = await axios.post(
-//         `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-//         {
-//           contents: [
-//             {
-//               role: 'user',
-//               parts: [{ text: prompt }],
-//             },
-//           ],
-//         }
-//       );
-  
-//       const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No suggestions.";
-//       const data = { suggestions: text };
-  
-//       console.log("🧠 Gemini AI Suggestions:", data);
-//       res.json(data);
-//     } catch (err) {
-//       console.error("❌ Gemini API Error:", err.response?.data || err.message);
-//       res.status(500).json({ error: 'Gemini Flash API failed' });
-//     }
-//   });
-  
-
-// //   / 🗘️ Route Optimization using OpenRouteService
-// app.get('/route', async (req, res) => {
-//     try {
-//       const {
-//         startLon = 77.5946,
-//         startLat = 12.9716,
-//         endLon = 78.4867,
-//         endLat = 17.3850,
-//       } = req.query;
-  
-//       const coordinates = [
-//         [parseFloat(startLon), parseFloat(startLat)],
-//         [parseFloat(endLon), parseFloat(endLat)],
-//       ];
-  
-//       console.log("🧬 Requested Route Coordinates:", coordinates);
-  
-//       const response = await axios.post(
-//         'https://api.openrouteservice.org/v2/directions/driving-car',
-//         { coordinates },
-//         {
-//           headers: {
-//             Authorization: process.env.ORS_API_KEY,
-//             'Content-Type': 'application/json',
-//           },
-//         }
-//       );
-  
-//       const feature = response.data.features?.[0];
-//       if (!feature) {
-//         return res.status(404).json({ error: 'Route data not found.' });
-//       }
-  
-//       const route = feature.properties.summary;
-//       const data = {
-//         distance_km: (route.distance / 1000).toFixed(2),
-//         duration_min: (route.duration / 60).toFixed(2),
-//       };
-  
-//       console.log("🗺️ Optimized Route:", data);
-//       res.json(data);
-//     } catch (err) {
-//       console.error("❌ Routing API Error Details:", err.response?.data || err.message);
-//       res.status(500).json({ error: 'Routing API failed' });
-//     }
-// });
-
-
-// // 🌦️ Weather API
-// app.get('/weather/:city', async (req, res) => {
-//     try {
-//       const city = req.params.city;
-//       const response = await axios.get(
-//         `http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHER_API_KEY}&q=${city}`
-//       );
-//       const data = {
-//         location: response.data.location.name,
-//         region: response.data.location.region,
-//         temp_c: response.data.current.temp_c,
-//         condition: response.data.current.condition.text,
-//         wind_kph: response.data.current.wind_kph,
-//       };
-//       console.log("🌦️ Weather Data:", data);
-//       res.json(data);
-//     } catch (err) {
-//       console.error("❌ Weather API Error:", err.message);
-//       res.status(500).json({ error: 'Weather API failed' });
-//     }
-//   });
-  

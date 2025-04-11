@@ -56,6 +56,7 @@
       },
       createMarker: function(i, waypoint, n) {
         if (i === 0) {
+          console.log(waypoint.latLng);
           return L.marker(waypoint.latLng, { icon: startIcon }).bindPopup('🚩 Start: Bangalore');
         } else {
           return L.marker(waypoint.latLng, { icon: endIcon }).bindPopup('🏁 End: Hyderabad');
