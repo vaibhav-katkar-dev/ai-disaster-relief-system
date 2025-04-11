@@ -10,6 +10,7 @@ const cors = require('cors');
 const app=express();
 const path= require("path");
 dotenv.config();
+const nodemailer = require("nodemailer");
 
 // server.js
 // // const express = require('express');
@@ -57,6 +58,45 @@ app.use(express.static("public"));
 const HelpRequest = require("./models/HelpRequest");
 
 
+
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true for port 465, false for other ports
+  auth: {
+    user: "maheshs.thombare@gmail.com",
+    pass: "gqpf efvj lgpn sova",
+  },
+  tls: {
+    rejectUnauthorized: false, // Ignore self-signed certificate error
+  },
+});
+// async..await is not allowed in global scope, must use a wrapper
+async function sendemail(to,helpType,fullName,distance,location,peopleCount,phone,description) {
+  try {
+    const info = await transporter.sendMail({
+      from: '"Mahesh👻" <maheshs.thombare@gmail.com>',
+      to,
+      subject: "For verification",
+      text: "gqpf efvj lgpn sova",
+      html: "<b>Hello Volunteer,</b><br><br>You have been <b>assigned a new help request</b> in your area. Here are the details:<br><br><b>Requester Name:</b>"+fullName+" <br><b>Location:</b>"+location+"<br><b>Phone:</b> "+phone+"<br><b>Type of Help Needed:</b> "+helpType+"<br><b>Number of People:</b> "+peopleCount+"<br><b>Description:</b> "+description+"<br><br>Please reach out to the requester as soon as possible and confirm their safety.<br><br>Thank you for your continued support and compassion! 💪<br><br>Warm regards,<br><b>Disaster Relief Team</b>",
+    });
+    console.log("Message sent: %s", info.messageId);
+  } catch (error) {
+    console.error("Email sending failed:", error.message);
+  }
+}
+
+app.get("/email", (req, res) => {
+  const recipient = "learnwithmst07@gmail.com";
+  sendemail(recipient); // don't await
+  res.render("index.ejs");
+});
+
+
+
+
 // const app = express();
 const PORT = process.env.PORT || 5000;
 const parser = new Parser({
@@ -101,8 +141,8 @@ app.get("/dashboard", async (req, res) => {
       locationName
     };
   }));
-
-  res.render("dashboard.ejs", { reqdata: enrichedData });
+  const count = await HelpRequest.countDocuments();
+  res.render("dashboard.ejs", { reqdata: enrichedData ,count});
 });
 
 
@@ -196,6 +236,8 @@ app.post("/reqhelp", async (req, res) => {
         );
         
         console.log(updatedDoc);
+        let volEmail=volunteer.email;
+        sendemail(volEmail,helpType,fullName,distance,location,peopleCount,phone,description);
         matched = true;
         console.log("✅ Match Found");
         console.log(`→ Help Needed: ${helpType}`);
@@ -549,9 +591,11 @@ async function news(city, disaster) {
     }
   }
 // 🏠 Root
-app.get('/', (req, res) => {
-  res.send('🌍 Welcome to the AI-Powered Disaster Relief API');
-});
+// app.get('/', (req, res) => {
+//   res.send('🌍 Welcome to the AI-Powered Disaster Relief API');
+// });
+
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
