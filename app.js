@@ -143,7 +143,7 @@ app.get("/dashboard/login", (req, res) => res.render("admin_login.ejs"));
 app.get("/reqhelp", (req, res) => res.render("reqHelp"));
 app.get("/offhelp", (req, res) => res.render("offerHelp"));
 
-// Dashboard with location names
+// Dashboard with location names hhhhh
 app.get("/dashboard", async (req, res) => {
   const reqdata = await HelpRequest.find();
   const enrichedData = await Promise.all(reqdata.map(async (item) => {
