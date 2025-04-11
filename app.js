@@ -78,6 +78,38 @@ app.get("/",(req,res)=>{
 app.get("/reqhelp",(req,res)=>{
   res.render("reqHelp")
 })
+const HelpRequest = require("./models/HelpRequest");
+
+app.post("/reqhelp", async (req, res) => {
+  try {
+    const {
+      fullName,
+      location,
+      phone,
+      helpType,
+      peopleCount,
+      description
+    } = req.body;
+
+    const newRequest = new HelpRequest({
+      fullName,
+      location,
+      phone,
+      helpType,
+      peopleCount,
+      description
+    });
+
+    await newRequest.save().then((r)=>console.log("data",r));
+    res.send(`<h2>✅ Help request submitted successfully, ${fullName}!</h2><a href="/reqhelp">Submit another request</a>`);
+  } catch (err) {
+    console.error("Error saving help request:", err);
+    res.status(500).send("❌ Internal Server Error. Please try again.");
+  }
+});
+
+
+
 app.get("/offhelp",(req,res)=>{
   res.render("offerHelp")
 })
@@ -109,7 +141,19 @@ app.post("/offhelp", async (req, res) => {
       travelRange
     });
 
-    await newVolunteer.save();
+    await newVolunteer.save().then((a)=>console.log("Stoerd",a)).catch((err)=>console.log("er",err));
+    // console.log( {
+    //   orgCheck,
+    //   firstName,
+    //   lastName,
+    //   location,
+    //   phone,
+    //   email,
+    //   assistance,
+    //   availability,
+    //   skills,
+    //   travelRange
+    // })
     res.send(`<h2>✅ Thank you, ${firstName}! Your offer has been recorded.</h2><a href="/offhelp">Go Back</a>`);
   } catch (err) {
     console.error("Error saving volunteer:", err);

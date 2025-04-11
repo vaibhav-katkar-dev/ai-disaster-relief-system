@@ -117,26 +117,26 @@
       ⚠️ For life-threatening emergencies, call your local emergency number (e.g., 911).
     </div>
 
-    <form>
+    <form action="/reqhelp" method="POST">
       <div class="form-group">
         <label for="name">Full Name*</label>
-        <input type="text" id="name" required placeholder="Enter your name" />
+        <input type="text" id="name" name="fullName" required placeholder="Enter your name" />
       </div>
-
+    
       <div class="form-group">
         <label for="location">Current Location*</label>
-        <input type="text" id="location" required placeholder="City, Street, Area" />
+        <input type="text" id="location" name="location" required placeholder="City, Street, Area" />
         <button type="button" class="detect-btn" onclick="detectLocation()">📍 Detect My Location</button>
       </div>
-
+    
       <div class="form-group">
         <label for="phone">Phone Number*</label>
-        <input type="tel" id="phone" required placeholder="+91-XXXXXXXXXX" />
+        <input type="tel" id="phone" name="phone" required placeholder="+91-XXXXXXXXXX" />
       </div>
-
+    
       <div class="form-group">
         <label for="help">Type of Help Needed*</label>
-        <select id="help" required>
+        <select id="help" name="helpType" required>
           <option value="" disabled selected>Select</option>
           <option value="food">Food</option>
           <option value="shelter">Shelter</option>
@@ -144,19 +144,20 @@
           <option value="rescue">Rescue</option>
         </select>
       </div>
-
+    
       <div class="form-group">
         <label for="people">No. of People*</label>
-        <input type="number" id="people" min="1" required />
+        <input type="number" id="people" name="peopleCount" min="1" required />
       </div>
-
+    
       <div class="form-group">
         <label for="description">Describe Your Situation*</label>
-        <textarea id="description" required placeholder="Brief description of the emergency..."></textarea>
+        <textarea id="description" name="description" required placeholder="Brief description of the emergency..."></textarea>
       </div>
-
+    
       <button type="submit">Submit Request</button>
     </form>
+    
   </div>
 
   <div class="footer">
