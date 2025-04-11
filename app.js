@@ -11,6 +11,7 @@ const path = require("path");
 dotenv.config();
 const app = express();
 const parser = new Parser({ headers: { 'User-Agent': 'Mozilla/5.0 (AI-Relief-Agent)' } });
+const nodemailer = require("nodemailer");
 
 mongoose.connect("mongodb://127.0.0.1:27017/disasterHelp2", {
   useNewUrlParser: true,
@@ -56,6 +57,36 @@ app.set("views", path.join(__dirname, "views"));
 //     res.status(500).json({ error: 'Internal Server Error' });
 //   }
 // });
+
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true for port 465, false for other ports
+  auth: {
+    user: "maheshs.thombare@gmail.com",
+    pass: "gqpf efvj lgpn sova",
+  },
+  tls: {
+    rejectUnauthorized: false, // Ignore self-signed certificate error
+  },
+});
+// async..await is not allowed in global scope, must use a wrapper
+async function sendemail(to,helpType,fullName,distance,location,peopleCount,phone,description) {
+  try {
+    const info = await transporter.sendMail({
+      from: '"Mahesh👻" <maheshs.thombare@gmail.com>',
+      to,
+      subject: "For verification",
+      text: "gqpf efvj lgpn sova",
+      html: "<b>Hello Volunteer,</b><br><br>You have been <b>assigned a new help request</b> in your area. Here are the details:<br><br><b>Requester Name:</b>"+fullName+" <br><b>Location:</b>"+location+"<br><b>Phone:</b> "+phone+"<br><b>Type of Help Needed:</b> "+helpType+"<br><b>Number of People:</b> "+peopleCount+"<br><b>Description:</b> "+description+"<br><br>Please reach out to the requester as soon as possible and confirm their safety.<br><br>Thank you for your continued support and compassion! 💪<br><br>Warm regards,<br><b>Disaster Relief Team</b>",
+    });
+    console.log("Message sent: %s", info.messageId);
+  } catch (error) {
+    console.error("Email sending failed:", error.message);
+  }
+}
+
 
 const cities = [
   { name: "Mumbai", lat: 19.076, lng: 72.8777 },
@@ -179,7 +210,8 @@ app.post("/reqhelp", async (req, res) => {
       if (distance <= canTravel && isHelpTypeMatch) {
         await HelpRequest.findByIdAndUpdate(newRequest._id, { status: "Assigned" });
         matched = true;
-
+        let volEmail=volunteer.email;
+        sendemail(volEmail,helpType,fullName,distance,location,peopleCount,phone,description);
         console.log(`✅ Match Found\n→ Volunteer: ${volunteer.firstName} ${volunteer.lastName}\n→ Distance: ${distance.toFixed(2)} km`);
         break;
       }
