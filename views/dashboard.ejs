@@ -306,13 +306,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>John Doe</td>
-                        <td>Chennai</td>
-                        <td>Food</td>
-                        <td><span class="status-pending">Pending</span></td>
-                        <td><a href="#">View</a> | <a href="#">Assign</a></td>
-                    </tr>
+                   
+                        <% reqdata.forEach(item => { %>
+                            <tr>
+                              <td><%= item.fullName %></td>
+                              <td><%= item.locationName %></td>
+                              <td><%= item.helpType %></td>
+                              <td><span class="<%= item.status === 'pending' ? 'status-pending' : (item.status === 'Assigned' ? 'status-assigned' : '') %>"><%= item.status %></span></td>
+                              <td><a href="#">View</a> | <a href="#">Assign</a></td>
+                            </tr>
+                          <% }) %>
+                       
+                    
                     <tr>
                         <td>Sarah Smith</td>
                         <td>Bangalore</td>
