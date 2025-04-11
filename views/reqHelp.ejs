@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Request Emergency Help</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f4;
+    }
+
+    .header {
+      background-color: #ff0000;
+      color: white;
+      padding: 15px 30px;
+      font-size: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #ff0000;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      padding: 12px 18px;
+      border: none;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .detect-btn {
+      margin-top: 10px;
+      display: inline-block;
+      background-color: #28a745;
+    }
+
+    .detect-btn:hover {
+      background-color: #1e7e34;
+    }
+
+    .note {
+      background-color: #ffe5e5;
+      border-left: 5px solid #ff0000;
+      padding: 12px;
+      margin-bottom: 25px;
+      font-size: 14px;
+      color: #990000;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #003087;
+      color: white;
+      margin-top: 40px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span>Emergency Aid Now</span>
+  </div>
+
+  <div class="container">
+    <h2>Request Emergency Help</h2>
+
+    <div class="note">
+      ⚠️ For life-threatening emergencies, call your local emergency number (e.g., 911).
+    </div>
+
+    <form action="/reqhelp" method="POST">
+      <div class="form-group">
+        <label for="name">Full Name*</label>
+        <input type="text" id="name" name="fullName" required placeholder="Enter your name" />
+      </div>
+    
+      <div class="form-group">
+        <label for="location">Current Location*</label>
+        <input type="text" id="location" name="location" required placeholder="City, Street, Area" />
+        <button type="button" class="detect-btn" onclick="detectLocation()">📍 Detect My Location</button>
+      </div>
+    
+      <div class="form-group">
+        <label for="phone">Phone Number*</label>
+        <input type="tel" id="phone" name="phone" required placeholder="+91-XXXXXXXXXX" />
+      </div>
+    
+      <div class="form-group">
+        <label for="help">Type of Help Needed*</label>
+        <select id="help" name="helpType" required>
+          <option value="" disabled selected>Select</option>
+          <option value="food">Food</option>
+          <option value="shelter">Shelter</option>
+          <option value="medical">Medical</option>
+          <option value="rescue">Rescue</option>
+        </select>
+      </div>
+    
+      <div class="form-group">
+        <label for="people">No. of People*</label>
+        <input type="number" id="people" name="peopleCount" min="1" required />
+      </div>
+    
+      <div class="form-group">
+        <label for="description">Describe Your Situation*</label>
+        <textarea id="description" name="description" required placeholder="Brief description of the emergency..."></textarea>
+      </div>
+    
+      <button type="submit">Submit Request</button>
+    </form>
+    
+  </div>
+
+  <div class="footer">
+    &copy; 2025 Emergency Aid Now — Made with ❤️ to help those in need.
+  </div>
+
+  <script>
+    function detectLocation() {
+      const locationInput = document.getElementById("location");
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            locationInput.value = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`;
+          },
+          () => {
+            alert("Unable to retrieve your location.");
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by your browser.");
+      }
+    }
+  </script>
+</body>
+</html>

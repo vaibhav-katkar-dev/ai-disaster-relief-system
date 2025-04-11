@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Offer Help - Emergency Aid</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9f9f9;
+    }
+
+    .header {
+      background-color: #ff0000;
+      color: white;
+      padding: 16px 30px;
+      font-size: 20px;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 50px auto;
+      padding: 35px;
+      background: #ffffff;
+      border-radius: 14px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    h2 {
+      text-align: center;
+      color: #d80000;
+      margin-bottom: 8px;
+      font-size: 26px;
+    }
+
+    .note {
+      text-align: center;
+      font-size: 15px;
+      color: #333;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 15px;
+      background: #fff;
+      transition: 0.3s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .detect-btn {
+      margin-top: 10px;
+      background-color: #28a745;
+      color: white;
+      padding: 10px 16px;
+      border: none;
+      font-size: 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .detect-btn:hover {
+      background-color: #1e7e34;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      background-color: #007bff;
+      color: white;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button[type="submit"]:hover {
+      background-color: #0056b3;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 20px;
+      background-color: #003087;
+      color: white;
+      margin-top: 50px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px;
+        padding: 25px;
+      }
+
+      h2 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    Emergency Aid Now
+  </div>
+
+  <div class="container">
+    <h2>Offer to Help</h2>
+    <div class="note">
+      Your willingness to help makes a real difference. Please provide your details below so we can match you with those in need.
+    </div>
+
+   
+html
+Copy
+Edit
+<form action="/offhelp" method="POST">
+  <div class="checkbox-group">
+    <input type="checkbox" id="orgCheck" name="orgCheck" />
+    <label for="orgCheck">I'm representing an organization</label>
+  </div>
+
+  <div class="form-group">
+    <label for="firstName">First Name*</label>
+    <input type="text" id="firstName" name="firstName" required placeholder="Enter your first name" />
+  </div>
+
+  <div class="form-group">
+    <label for="lastName">Last Name*</label>
+    <input type="text" id="lastName" name="lastName" required placeholder="Enter your last name" />
+  </div>
+
+  <div class="form-group">
+    <label for="location">Your Location*</label>
+    <input type="text" id="location" name="location" required placeholder="Enter your current address or area" />
+    <button type="button" class="detect-btn" onclick="detectLocation()">📍 Detect My Location</button>
+  </div>
+
+  <div class="form-group">
+    <label for="phone">Phone Number*</label>
+    <input type="tel" id="phone" name="phone" required placeholder="+91-XXXXXXXXXX" />
+  </div>
+
+  <div class="form-group">
+    <label for="email">Email Address*</label>
+    <input type="email" id="email" name="email" required placeholder="your@email.com" />
+  </div>
+
+  <div class="form-group">
+    <label for="assistance">Help You Can Provide*</label>
+    <select id="assistance" name="assistance" required>
+      <option value="" disabled selected>Select assistance type</option>
+      <option value="volunteering">General Volunteering</option>
+      <option value="transport">Transportation</option>
+      <option value="medical">Medical Help</option>
+      <option value="supplies">Supply Donation</option>
+      <option value="shelter">Shelter</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="availability">Availability*</label>
+    <select id="availability" name="availability" required>
+      <option value="" disabled selected>Select availability</option>
+      <option value="anytime">Anytime (24/7)</option>
+      <option value="daytime">Daytime Only</option>
+      <option value="weekends">Weekends Only</option>
+    </select>
+  </div>
+
+  <div class="form-group">
+    <label for="skills">Your Skills or Special Resources</label>
+    <textarea id="skills" name="skills" placeholder="E.g., medical training, boats, machinery, etc."></textarea>
+  </div>
+
+  <div class="form-group">
+    <label for="travelRange">How far can you travel to help?</label>
+    <select id="travelRange" name="travelRange" required>
+      <option value="" disabled selected>Select range</option>
+      <option value="10">Up to 10 km</option>
+      <option value="50">50 km</option>
+      <option value="100">100 km</option>
+      <option value="200">200 km</option>
+      <option value="any">Anywhere if needed</option>
+    </select>
+  </div>
+
+  <button type="submit">Register as Volunteer</button>
+</form>
+
+  </div>
+
+  <div class="footer">
+    &copy; 2025 Emergency Aid Now — Made with ❤️ for those in need.
+  </div>
+
+  <script>
+    function detectLocation() {
+      const locationInput = document.getElementById("location");
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            locationInput.value = `Lat: ${latitude.toFixed(4)}, Lon: ${longitude.toFixed(4)}`;
+          },
+          () => {
+            alert("Unable to retrieve your location.");
+          }
+        );
+      } else {
+        alert("Geolocation is not supported by your browser.");
+      }
+    }
+  </script>
+
+<script>
+  const form = document.getElementById("volunteerForm");
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault(); // stop form from reloading page
+
+    // Create a data object from form fields
+    const data = {
+      isOrganization: document.getElementById("orgCheck").checked,
+      firstName: document.getElementById("firstName").value,
+      lastName: document.getElementById("lastName").value,
+      location: document.getElementById("location").value,
+      phone: document.getElementById("phone").value,
+      email: document.getElementById("email").value,
+      assistance: document.getElementById("assistance").value,
+      availability: document.getElementById("availability").value,
+      skills: document.getElementById("skills").value,
+      travelRange: document.getElementById("travelRange").value
+    };
+
+    try {
+      const res = await fetch("/offer-help", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+      });
+
+      const result = await res.json();
+
+      if (res.ok) {
+        alert("✅ Volunteer registered successfully!");
+        form.reset();
+      } else {
+        alert("❌ Error: " + result.message);
+      }
+
+    } catch (err) {
+      console.error("Error sending data:", err);
+      alert("Server error! Please try again.");
+    }
+  });
+</script>
+
+</body>
+</html>

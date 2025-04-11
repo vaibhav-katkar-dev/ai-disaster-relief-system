@@ -1,13 +1,53 @@
+
 // server.js
 const express = require('express');
 const axios = require('axios');
 const dotenv = require('dotenv');
+const bodyParser = require('body-parser');
+
 const Parser = require('rss-parser');
 const cors = require('cors');
 const app=express();
 const path= require("path");
 dotenv.config();
 
+// server.js
+// // const express = require('express');
+// const axios = require('axios');
+// const dotenv = require('dotenv');
+// const Parser = require('rss-parser');
+// const cors = require('cors');
+// // const app=express();
+// const path= require("path");
+// dotenv.config();
+
+
+const mongoose = require('mongoose');
+// const volunteerRoutes = require('./routes/volunteer'); // <-- ✅ your route file
+
+
+
+// DB Setup
+mongoose.connect("mongodb://127.0.0.1:27017/disasterHelp", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+// Schema & Model
+const volunteerSchema = new mongoose.Schema({
+  isOrganization: Boolean,
+  firstName: String,
+  lastName: String,
+  location: String,
+  phone: String,
+  email: String,
+  assistance: String,
+  availability: String,
+  skills: String,
+  travelRange: String
+});
+
+const Volunteer = mongoose.model("Volunteer", volunteerSchema);
 
 
 app.use(express.json());
@@ -26,16 +66,167 @@ app.set("views", path.join(__dirname, "views")); // Folder where your EJS files 
 
 app.use(cors());
 app.use(express.json());
+// app.use('/api', volunteerRoutes); // now all routes inside volunteer.js will be prefixed with /api
+
+
 
 app.get("/",(req,res)=>{
     res.render("index.ejs")
 })
-app.get("/dashboard/login",(req,res)=>{
-  res.render("admin_login.ejs")
+
+
+app.get("/reqhelp",(req,res)=>{
+  res.render("reqHelp")
 })
-app.get("/dashboard",(req,res)=>{
-  res.render("dashboard.ejs")
+const HelpRequest = require("./models/HelpRequest");
+
+function getLatLon(locationStr) {
+  if (typeof locationStr !== "string") return null; // 🛡️ Safe check added
+  const match = locationStr.match(/Lat:\s*([-.\d]+),\s*Lon:\s*([-.\d]+)/);
+  return match ? { lat: parseFloat(match[1]), lon: parseFloat(match[2]) } : null;
+}
+
+
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Radius of Earth in km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) *
+    Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2;
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+app.post("/reqhelp", async (req, res) => {
+  try {
+    const {
+      fullName,
+      location,
+      phone,
+      helpType,
+      peopleCount,
+      description
+    } = req.body;
+
+    const newRequest = new HelpRequest({
+      fullName,
+      location,
+      phone,
+      helpType,
+      peopleCount,
+      description
+    });
+
+    await newRequest.save();
+    console.log("✅ Help request saved:", newRequest);
+
+    const requestLoc = getLatLon(location);
+    if (!requestLoc) {
+      console.log("❌ Invalid request location format:", location);
+      return res.status(400).send("❌ Invalid location format. Use: 'Lat: 18.5204, Lon: 73.8567'");
+    }
+
+    const volunteers = await Volunteer.find();
+    let matched = false;
+
+    for (const volunteer of volunteers) {
+      const volunteerLoc = getLatLon(volunteer.location);
+      if (!volunteerLoc) {
+        console.log(`⚠️ Skipped volunteer with invalid location: ${volunteer.location}`);
+        continue;
+      }
+
+      const distance = calculateDistanceKm(
+        volunteerLoc.lat, volunteerLoc.lon,
+        requestLoc.lat, requestLoc.lon
+      );
+
+      const canTravel = parseFloat(volunteer.travelRange || "0");
+      const isHelpTypeMatch = (volunteer.assistance || "").toLowerCase() === helpType.toLowerCase();
+
+      if (distance <= canTravel && isHelpTypeMatch) {
+        matched = true;
+        console.log("✅ Match Found");
+        console.log(`→ Help Needed: ${helpType}`);
+        console.log(`→ Request By : ${fullName} (${phone})`);
+        console.log(`→ Location    : ${location}`);
+        console.log(`→ Volunteer   : ${volunteer.firstName} ${volunteer.lastName} (${volunteer.phone})`);
+        console.log(`→ Skills      : ${volunteer.skills}`);
+        console.log(`→ Distance    : ${distance.toFixed(2)} km`);
+        console.log(`→ Travel Limit: ${canTravel} km`);
+        console.log("---------------------------");
+      }
+    }
+
+    if (!matched) {
+      console.log("❌ No matching volunteer found for this request.");
+    }
+
+    res.send(`<h2>✅ Help request submitted successfully, ${fullName}!</h2><a href="/reqhelp">Submit another request</a>`);
+  } catch (err) {
+    console.error("❌ Error saving help request:", err);
+    res.status(500).send("❌ Internal Server Error. Please try again.");
+  }
+});
+
+
+
+app.get("/offhelp",(req,res)=>{
+  res.render("offerHelp")
 })
+app.post("/offhelp", async (req, res) => {
+  try {
+    const {
+      orgCheck,
+      firstName,
+      lastName,
+      location,
+      phone,
+      email,
+      assistance,
+      availability,
+      skills,
+      travelRange
+    } = req.body;
+
+    const newVolunteer = new Volunteer({
+      isOrganization: orgCheck === "on", // Checkbox returns "on" if checked
+      firstName,
+      lastName,
+      location,
+      phone,
+      email,
+      assistance,
+      availability,
+      skills,
+      travelRange
+    });
+
+    await newVolunteer.save().then((a)=>console.log("Stoerd",a)).catch((err)=>console.log("er",err));
+    // console.log( {
+    //   orgCheck,
+    //   firstName,
+    //   lastName,
+    //   location,
+    //   phone,
+    //   email,
+    //   assistance,
+    //   availability,
+    //   skills,
+    //   travelRange
+    // })
+    res.send(`<h2>✅ Thank you, ${firstName}! Your offer has been recorded.</h2><a href="/offhelp">Go Back</a>`);
+  } catch (err) {
+    console.error("Error saving volunteer:", err);
+    res.status(500).send("❌ Internal Server Error. Please try again.");
+  }
+});
+
 
 
 // app.post("/location", (req, res) => {
@@ -319,4 +510,6 @@ app.get('/', (req, res) => {
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
+
+
 
