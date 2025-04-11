@@ -224,61 +224,58 @@
             color: #d32f2f;
         }
     </style>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
 </head>
 <body>
     <div class="header">
         <div class="logo">Emergency Aid Now</div>
         <div class="nav">
-            <a href="#">Home</a>
-            <a href="#">Request Help</a>
-            <a href="#">Offer Help</a>
+            <a href="/">Home</a>
+            <a href="rqhelp">Request Help</a>
+            <a href="offhelp">Offer Help</a>
             <a href="#">Dashboard</a>
-            <button class="login-btn">Login</button>
+            <!-- <button class="login-btn">Login</button> -->
         </div>
     </div>
 
     <div class="content">
         <h2 class="dashboard-title">Admin Dashboard</h2>
         <p class="dashboard-description">Manage emergency response and coordination</p>
-        <button class="alert-btn" onclick="sendAlert()">Send Alert</button>
-        <button class="alert-btn" style="background-color: #d32f2f;">Emergency Broadcast</button>
+        <!-- <button class="alert-btn" onclick="sendAlert()">Send Alert</button> -->
+        <!-- <button class="alert-btn" style="background-color: #d32f2f;">Emergency Broadcast</button> -->
 
         <div class="stats-grid">
             <div class="stat-card">
                 <i class="fas fa-users"></i>
-                <h3>127</h3>
-                <p>Help Requests<br>↑ 12% vs last week</p>
+                <h3><%= requests %></h3>
+                <!-- <p>Help Requests<br>↑ 12% vs last week</p> -->
             </div>
             <div class="stat-card">
                 <i class="fas fa-user"></i>
-                <h3>56</h3>
-                <p>Volunteers<br>↑ 5% vs last week</p>
+                <h3><%= volunteers %></h3>
+                <!-- <p>Volunteers<br>↑ 5% vs last week</p> -->
             </div>
             <div class="stat-card">
                 <i class="fas fa-check"></i>
-                <h3>42</h3>
-                <p>Matched Pairs<br>↑ 8% vs last week</p>
+                <h3><%= deliveries %></h3>
+                <!-- <p>Matched Pairs<br>↑ 8% vs last week</p>. -->
             </div>
-            <div class="stat-card">
-                <i class="fas fa-bell"></i>
-                <h3>3</h3>
-                <p>Active Alerts</p>
-            </div>
+            
         </div>
 
         <div class="map-section">
-            <h3>Disaster Map</h3>
-            <p class="dashboard-description">View emergency zones and help requests</p>
-            <div class="map-placeholder">
-                Interactive disaster map would load here
-            </div>
+            <h2>Real-time Disaster Map</h2>
+          
+                <div class="map-placeholder" id="disasterMap" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+
+           
+            <!-- <button class="view-map-btn">View Full Map</button> -->
             <div class="legend">
                 <span><span style="display: inline-block; width: 12px; height: 12px; background-color: #d32f2f; border-radius: 50%;"></span> High Severity</span>
                 <span><span style="display: inline-block; width: 12px; height: 12px; background-color: #ffca28; border-radius: 50%;"></span> Medium Severity</span>
                 <span><span style="display: inline-block; width: 12px; height: 12px; background-color: #0288d1; border-radius: 50%;"></span> Low Severity</span>
-            </div>
-            <div style="margin-top: 10px; color: #6c757d;">
-                Active Disaster Zones: <span style="color: #d32f2f;">Chennai Floods</span>, <span style="color: #ffca28;">Bangalore Tornado Warning</span>, <span style="color: #0288d1;">Hyderabad Earthquake</span>
             </div>
         </div>
 
@@ -287,8 +284,8 @@
             <p class="dashboard-description">Common administrative tasks</p>
             <a href="#" onclick="autoMatch()"><i class="fas fa-sync"></i> Auto-Match Requests & Volunteers</a>
             <a href="#" onclick="sendBroadcast()"><i class="fas fa-bullhorn"></i> Send Emergency Broadcast</a>
-            <a href="#" onclick="generateReport()"><i class="fas fa-file-alt"></i> Generate Situation Report</a>
-            <a href="#" onclick="sendSMS()"><i class="fas fa-sms"></i> Send SMS to Volunteers</a>
+            <a href="/location" onclick="generateReport()"><i class="fas fa-file-alt"></i> Generate Situation Report</a>
+            <a href="#" onclick="sendSMS()"><i class="fas fa-sms"></i> Send Emain to Volunteers</a>
             <a href="#" onclick="planRoutes()"><i class="fas fa-map"></i> Plan Delivery Routes</a>
         </div>
 
@@ -389,7 +386,64 @@
         function sendSMS() { alert("SMS sent to volunteers!"); }
         function planRoutes() { alert("Delivery routes planned!"); }
     </script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    
+    <script>
+        const map = L.map('disasterMap').setView([20.5937, 78.9629], 5); // Center on India
+
+// Add OpenStreetMap tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors'
+}).addTo(map);
+
+// Severity to color mapping
+const severityColors = {
+  High: '#d32f2f',
+  Medium: '#ffca28',
+  Low: '#0288d1'
+};
+
+  // Fetch disaster data from the API
+  fetch('/api/disasters/grouped')
+    .then(res => res.json())
+    .then(data => {
+      for (const severity in data) {
+        const color = getColor(severity); // Get color based on severity
+        data[severity].forEach(disaster => {
+          if (disaster.location && disaster.location.lat && disaster.location.lng) {
+            plotMarker(disaster.location.lat, disaster.location.lng, color, disaster.city, severity);
+          }
+        });
+      }
+    })
+    .catch(err => {
+      console.error("Failed to fetch disaster data:", err);
+    });
+
+  // Function to plot marker on map
+  function plotMarker(lat, lng, color, city, severity) {
+    L.circleMarker([lat, lng], {
+      radius: 8,
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.9
+    }).addTo(map).bindPopup(`<strong>${city}</strong><br>Severity: ${severity}`);
+  }
+
+  // Utility to get color based on severity
+  function getColor(severity) {
+    if (severity === 'High') return '#d32f2f';
+    if (severity === 'Medium') return '#ffca28';
+    return '#0288d1'; // Default = Low
+  }
+</script>
+<script>
+    // Embedded JS
+    function toggleFullscreen() {
+      const map = document.getElementById("disasterMap");
+      document.body.classList.toggle("fullscreen-map");
+      map.classList.toggle("fullscreen");
+    }
+    </script>
 </body>
 </html>
