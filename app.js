@@ -28,7 +28,7 @@ const mongoose = require('mongoose');
 
 
 // DB Setup
-mongoose.connect("mongodb://127.0.0.1:27017/disasterHelp", {
+mongoose.connect("mongodb://127.0.0.1:27017/disasterHelp2", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
@@ -54,6 +54,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Serve static files if needed
 app.use(express.static("public"));
+const HelpRequest = require("./models/HelpRequest");
 
 // const app = express();
 const PORT = process.env.PORT || 5000;
@@ -74,11 +75,39 @@ app.get("/",(req,res)=>{
     res.render("index.ejs")
 })
 
+// app.get("/dashboard",async(req,res)=>{
+//   const reqdata = await HelpRequest.find();
+//   console.log(reqdata);
+//   res.render("dashboard.ejs",{reqdata});
+// })
+
+const reverseGeocode = require("./utils/reverseGeocode");
+
+app.get("/dashboard", async (req, res) => {
+  const reqdata = await HelpRequest.find();
+
+  // Add location names
+  const enrichedData = await Promise.all(reqdata.map(async (item) => {
+    const [lat, lon] = item.location.match(/[-+]?[0-9]*\.?[0-9]+/g); // Extract lat & lon
+    const locationName = await reverseGeocode(lat, lon);
+    return {
+      ...item.toObject(), // convert mongoose document to plain JS object
+      locationName
+    };
+  }));
+
+  res.render("dashboard.ejs", { reqdata: enrichedData });
+});
+
+
+app.get("/dashboard/login",(req,res)=>{
+  res.render("admin_login.ejs")
+})
 
 app.get("/reqhelp",(req,res)=>{
   res.render("reqHelp")
 })
-const HelpRequest = require("./models/HelpRequest");
+
 
 function getLatLon(locationStr) {
   if (typeof locationStr !== "string") return null; // 🛡️ Safe check added
@@ -140,7 +169,7 @@ app.post("/reqhelp", async (req, res) => {
         console.log(`⚠️ Skipped volunteer with invalid location: ${volunteer.location}`);
         continue;
       }
-
+      
       const distance = calculateDistanceKm(
         volunteerLoc.lat, volunteerLoc.lon,
         requestLoc.lat, requestLoc.lon
@@ -150,6 +179,13 @@ app.post("/reqhelp", async (req, res) => {
       const isHelpTypeMatch = (volunteer.assistance || "").toLowerCase() === helpType.toLowerCase();
 
       if (distance <= canTravel && isHelpTypeMatch) {
+        const updatedDoc = await HelpRequest.findByIdAndUpdate(
+          newRequest._id,
+          { status: "Assigned" },
+          { new: true } // return the updated document
+        );
+        
+        console.log(updatedDoc);
         matched = true;
         console.log("✅ Match Found");
         console.log(`→ Help Needed: ${helpType}`);
