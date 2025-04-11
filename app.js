@@ -11,6 +11,7 @@ const path = require("path");
 dotenv.config();
 const app = express();
 const parser = new Parser({ headers: { 'User-Agent': 'Mozilla/5.0 (AI-Relief-Agent)' } });
+const nodemailer = require("nodemailer");
 
 mongoose.connect("mongodb://127.0.0.1:27017/disasterHelp2", {
   useNewUrlParser: true,
@@ -44,6 +45,10 @@ app.use(cors());
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
+
+// Routes
+const riskModelRoutes = require('./routes/riskModel');
+app.use('/api/risk', riskModelRoutes);
 // const Disaster = require('./models/Disaster');
 // const Disaster = require('./models/Disaster'); // Adjust path as needed
 
@@ -56,6 +61,41 @@ app.set("views", path.join(__dirname, "views"));
 //     res.status(500).json({ error: 'Internal Server Error' });
 //   }
 // });
+
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true for port 465, false for other ports
+  auth: {
+    user: "maheshs.thombare@gmail.com",
+    pass: "gqpf efvj lgpn sova",
+  },
+  tls: {
+    rejectUnauthorized: false, // Ignore self-signed certificate error
+  },
+});
+// async..await is not allowed in global scope, must use a wrapper
+async function sendemail(to,helpType,fullName,distance,location,peopleCount,phone,description) {
+  const [latPart, lonPart] = location.split(',');
+  const lat = latPart.split(':')[1].trim();
+  const lon = lonPart.split(':')[1].trim();
+  // console.log("ha re hbhai",lat,lon)
+  
+  try {
+    const info = await transporter.sendMail({
+      from: '"Mahesh👻" <maheshs.thombare@gmail.com>',
+      to,
+      subject: "For verification",
+      text: "gqpf efvj lgpn sova",
+      html: `<b>Hello Volunteer,</b><br><br>You have been <b>assigned a new help request</b> in your area. Here are the details:<br><br><b>Requester Name:</b>"+${fullName}+" <br><b>Location:</b>"+${location}+"<br><b>Phone:</b> "+${phone}+"<br><b>Type of Help Needed:</b> "+${helpType}+"<br><b>Number of People:</b> "+${peopleCount}+"<br><b>Description:</b> "+${description}+"<br><br><a href='https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}'>get direction</a><br>Please reach out to the requester as soon as possible and confirm their safety.<br><br>Thank you for your continued support and compassion! 💪<br><br>Warm regards,<br><b>Disaster Relief Team</b>`,
+    });
+    console.log("Message sent: %s", info.messageId);
+  } catch (error) {
+    console.error("Email sending failed:", error.message);
+  }
+}
+
 
 const cities = [
   { name: "Mumbai", lat: 19.076, lng: 72.8777 },
@@ -151,7 +191,12 @@ app.get("/dashboard", async (req, res) => {
     const locationName = await reverseGeocode(lat, lon);
     return { ...item.toObject(), locationName };
   }));
-  res.render("dashboard.ejs", { reqdata: enrichedData });
+
+
+  const requests = await HelpRequest.countDocuments();
+  const volunteers = await Volunteer.countDocuments();
+  const deliveries = Math.floor(requests * 0.3);
+  res.render("dashboard.ejs", { reqdata: enrichedData,requests, volunteers, deliveries  });
 });
 
 // Submit Help Request
@@ -179,7 +224,8 @@ app.post("/reqhelp", async (req, res) => {
       if (distance <= canTravel && isHelpTypeMatch) {
         await HelpRequest.findByIdAndUpdate(newRequest._id, { status: "Assigned" });
         matched = true;
-
+        let volEmail=volunteer.email;
+        sendemail(volEmail,helpType,fullName,distance,location,peopleCount,phone,description);
         console.log(`✅ Match Found\n→ Volunteer: ${volunteer.firstName} ${volunteer.lastName}\n→ Distance: ${distance.toFixed(2)} km`);
         break;
       }
@@ -233,9 +279,24 @@ app.post("/offhelp", async (req, res) => {
   }
 });
 
-// Report Page
+
+
+
+// Dummy data fallback (optional)
+const fallbackNews = ["Flood warning issued", "Rescue operations on standby"];
+const fallbackTweets = ["Water levels rising", "Heavy rainfall causing traffic jams"];
+const fallbackWeather = [{
+  temperature: "23°C",
+  condition: "Heavy Rain",
+  humidity: "92%",
+  windSpeed: "15 km/h",
+  alert: "IMD issued red alert"
+}];
+
+// 🌍 GET Location-Based Disaster Report
 app.get('/location', async (req, res) => {
   try {
+    // Step 1: Get User Location by IP
     const response = await axios.get('http://ip-api.com/json');
     const data = {
       city: response.data.city,
@@ -245,74 +306,121 @@ app.get('/location', async (req, res) => {
       lon: response.data.lon
     };
 
-    const newsData = await news(data.city, "flood");
-    const weatherData = await weather(data.city);
-    const tweets = await twitter("flood", data.lat, data.lon, "10km");
+    // Step 2: Fetch all data, fallback to safe defaults if fails
+    let newsData = [];
+    let weatherData = [];
+    let tweets = [];
+
+    try {
+      newsData = await news(data.city, "flood") || [];
+    } catch (err) {
+      console.warn("⚠️ News fetch failed:", err.message);
+      newsData = fallbackNews;
+    }
+
+    try {
+      weatherData = await weather(data.city) || [];
+    } catch (err) {
+      console.warn("⚠️ Weather fetch failed:", err.message);
+      weatherData = fallbackWeather;
+    }
+
+    try {
+      tweets = await twitter("flood", data.lat, data.lon, "10km") || [];
+    } catch (err) {
+      console.warn("⚠️ Tweets fetch failed:", err.message);
+      tweets = fallbackTweets;
+    }
+
+    // Step 3: Generate AI summary
     const raw = await gemini({ location: data, tweets, news: newsData, weather: weatherData });
 
-    const markdownRaw = typeof raw.suggestions === "string" ? raw.suggestions : JSON.stringify(raw, null, 2);
+    // Step 4: Convert Markdown → HTML for display
+    const markdownRaw = typeof raw.suggestions === "string"
+      ? raw.suggestions
+      : JSON.stringify(raw, null, 2);
     const htmlOutput = marked.parse(markdownRaw);
+
     return res.render("Report.ejs", { data, jdata: htmlOutput });
 
   } catch (error) {
-    console.error("❌ Error in /location:", error.message);
+    console.error("❌ Fatal Error in /location route:", error.message);
     if (!res.headersSent) return res.status(500).send("Internal Server Error");
   }
 });
 
+
 // Simulated Gemini AI response
 async function gemini({ location, tweets, news, weather }) {
-  const simulatedTweets = [
-    "Water levels rising near Sinhagad Road.",
-    "Multiple vehicles stuck in Kothrud underpass.",
-    "Pune University Road flooded. Avoid the area.",
-    "Continuous rain in Hadapsar.",
-    "Deccan flooded – people stranded."
-  ];
+  const city = location.city;
+  const region = location.region;
+  const country = location.country;
 
-  const simulatedWeather = [{ temperature: "22°C", condition: "Heavy Rain", humidity: "95%", windSpeed: "12 km/h", alert: "Red alert issued by IMD for Pune" }];
-  const simulatedNews = [
-    "Floods cause havoc in Pune.",
-    "Rescue teams deployed.",
-    "Schools shut due to waterlogging.",
-    "Power outages reported.",
-    "Heavy rainfall forecasted for 48 hrs."
-  ];
+  const weatherData = weather[0] || {
+    temperature: "23°C",
+    condition: "Heavy Rain",
+    humidity: "92%",
+    windSpeed: "15 km/h",
+    alert: "IMD issued red alert"
+  };
 
   const response = {
     suggestions: `
-### 🛟 Disaster Relief Summary
+### 🛟 Disaster Relief Summary for ${city}, ${region}, ${country}
 
-**📍 Location**: ${location.city}, ${location.region}, ${location.country}
+---
 
-**🌧️ Weather**: ${weather[0]?.condition || simulatedWeather[0].condition}
+#### 📍 Location Details:
+- **City**: ${city}
+- **Region**: ${region}
+- **Country**: ${country}
+- **Coordinates**: ${location.lat}, ${location.lon}
 
-**📢 Alerts**:
-- ${weather[0]?.alert || simulatedWeather[0].alert}
-- ${news[0] || simulatedNews[0]}
+---
 
-**📲 Social Media Reports**:
-${(tweets || simulatedTweets).map(t => `- ${t}`).join('\n')}
+#### 🌧️ Weather Report:
+- **Condition**: ${weatherData.condition}
+- **Temperature**: ${weatherData.temperature}
+- **Humidity**: ${weatherData.humidity}
+- **Wind Speed**: ${weatherData.windSpeed}
+- **Alert**: ${weatherData.alert}
 
-**✅ Recommendations**:
-- Avoid low-lying areas
-- Contact local NGOs
-- Keep emergency contacts handy
+---
+
+#### 📰 Latest News:
+${news.map((item, i) => `- ${i + 1}. ${item}`).join('\n')}
+
+---
+
+#### 📢 Real-Time Tweets Near You:
+${tweets.map((tweet, i) => `- ${i + 1}. ${tweet}`).join('\n')}
+
+---
+
+#### ✅ Actionable Recommendations:
+- Stay indoors and avoid flooded roads
+- Keep your mobile charged and ready
+- Contact nearest shelter or emergency helpline
+- Follow alerts from IMD and local authorities
+- If stranded, dial emergency services and send your live location
+
+---
+
+#### 🆘 Emergency Contacts (India):
+- **National Disaster Helpline**: 1078
+- **Police**: 100
+- **Ambulance**: 102 / 108
+- **Fire Department**: 101
+
+Stay safe. 🌧️💪
+
+---
+_Last updated: ${new Date().toLocaleString()}_
 `
   };
   return response;
 }
 
-// Dummy handlers (replace with real ones if you have logic)
-async function news(city, disaster) {
-  return [`Major ${disaster} in ${city}`, "Rescue teams on alert"];
-}
-async function weather(city) {
-  return [{ condition: "Heavy Rain", alert: "Flood warning in effect" }];
-}
-async function twitter(topic, lat, lon, radius) {
-  return ["Tweet 1 about " + topic, "Tweet 2 near your location"];
-}
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));

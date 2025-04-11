@@ -1,74 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Realistic Route & Distance</title>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map Routing</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"
+  />
   <style>
     #map {
       height: 100vh;
       width: 100%;
-    }
-    .leaflet-routing-container {
-      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <div id="map"></div>
 
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.min.js"></script>
+
   <script>
-    const map = L.map('map').setView([15.2993, 74.1240], 6);
-  
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
+    // Get coordinates from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const startLat = parseFloat(urlParams.get("lat"));
+    const startLng = parseFloat(urlParams.get("lng"));
+
+    if (!startLat || !startLng) {
+      alert("❌ Missing 'lat' or 'lng' in URL parameters.");
+      throw new Error("Missing coordinates in URL.");
+    }
+
+    // Load map
+    const map = L.map("map").setView([startLat, startLng], 7);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "© OpenStreetMap contributors",
     }).addTo(map);
-  
-    // ✅ Custom icons for start and end
+
+    // Icons
     const startIcon = L.icon({
-      iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png', // start flag icon
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/684/684908.png",
       iconSize: [30, 30],
       iconAnchor: [15, 30],
-      popupAnchor: [0, -30],
     });
-  
+
     const endIcon = L.icon({
-      iconUrl: 'https://cdn-icons-png.flaticon.com/512/149/149059.png', // end point icon
+      iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149059.png",
       iconSize: [30, 30],
       iconAnchor: [15, 30],
-      popupAnchor: [0, -30],
     });
-  
-    const control = L.Routing.control({
-      waypoints: [
-        L.latLng(12.9716, 77.5946), // Bangalore
-        L.latLng(17.3850, 78.4867), // Hyderabad
-      ],
-      routeWhileDragging: true,
-      show: true,
-      collapsible: true,
-      lineOptions: {
-        styles: [{ color: 'blue', opacity: 0.8, weight: 6 }]
+
+    // Get current location
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const endLat = position.coords.latitude;
+        const endLng = position.coords.longitude;
+
+        const control = L.Routing.control({
+          waypoints: [
+            L.latLng(startLat, startLng),
+            L.latLng(endLat, endLng),
+          ],
+          routeWhileDragging: true,
+          collapsible: true,
+          lineOptions: {
+            styles: [{ color: "blue", opacity: 0.8, weight: 6 }],
+          },
+          createMarker: function (i, waypoint, n) {
+            if (i === 0) {
+              return L.marker(waypoint.latLng, { icon: startIcon }).bindPopup("🚩 Start Location");
+            } else {
+              return L.marker(waypoint.latLng, { icon: endIcon }).bindPopup("🏁 Your Location");
+            }
+          },
+        }).addTo(map);
+
+        control.on("routesfound", function (e) {
+          const route = e.routes[0].summary;
+          alert(
+            `✅ Distance: ${(route.totalDistance / 1000).toFixed(2)} km\n⏱️ Duration: ${(route.totalTime / 60).toFixed(2)} mins`
+          );
+        });
       },
-      createMarker: function(i, waypoint, n) {
-        if (i === 0) {
-          console.log(waypoint.latLng);
-          return L.marker(waypoint.latLng, { icon: startIcon }).bindPopup('🚩 Start: Bangalore');
-        } else {
-          return L.marker(waypoint.latLng, { icon: endIcon }).bindPopup('🏁 End: Hyderabad');
-        }
+      (error) => {
+        console.error("Geolocation error:", error.message);
+        alert("Failed to get current location.");
       }
-    }).addTo(map);
-  
-    control.on('routesfound', function(e) {
-      const route = e.routes[0].summary;
-      alert(`✅ Distance: ${(route.totalDistance / 1000).toFixed(2)} km\n⏱️ Duration: ${(route.totalTime / 60).toFixed(2)} mins`);
-    });
+    );
   </script>
-  
 </body>
 </html>
