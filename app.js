@@ -2,12 +2,40 @@
 const express = require('express');
 const axios = require('axios');
 const dotenv = require('dotenv');
+const bodyParser = require('body-parser');
+
 const Parser = require('rss-parser');
 const cors = require('cors');
 const app=express();
 const path= require("path");
 dotenv.config();
 
+const mongoose = require('mongoose');
+// const volunteerRoutes = require('./routes/volunteer'); // <-- ✅ your route file
+
+
+
+// DB Setup
+mongoose.connect("mongodb://127.0.0.1:27017/disasterHelp", {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+// Schema & Model
+const volunteerSchema = new mongoose.Schema({
+  isOrganization: Boolean,
+  firstName: String,
+  lastName: String,
+  location: String,
+  phone: String,
+  email: String,
+  assistance: String,
+  availability: String,
+  skills: String,
+  travelRange: String
+});
+
+const Volunteer = mongoose.model("Volunteer", volunteerSchema);
 
 
 app.use(express.json());
@@ -26,10 +54,57 @@ app.set("views", path.join(__dirname, "views")); // Folder where your EJS files 
 
 app.use(cors());
 app.use(express.json());
+// app.use('/api', volunteerRoutes); // now all routes inside volunteer.js will be prefixed with /api
+
+
 
 app.get("/",(req,res)=>{
     res.render("index.ejs")
 })
+
+
+app.get("/reqhelp",(req,res)=>{
+  res.render("reqHelp")
+})
+app.get("/offhelp",(req,res)=>{
+  res.render("offerHelp")
+})
+app.post("/offhelp", async (req, res) => {
+  try {
+    const {
+      orgCheck,
+      firstName,
+      lastName,
+      location,
+      phone,
+      email,
+      assistance,
+      availability,
+      skills,
+      travelRange
+    } = req.body;
+
+    const newVolunteer = new Volunteer({
+      isOrganization: orgCheck === "on", // Checkbox returns "on" if checked
+      firstName,
+      lastName,
+      location,
+      phone,
+      email,
+      assistance,
+      availability,
+      skills,
+      travelRange
+    });
+
+    await newVolunteer.save();
+    res.send(`<h2>✅ Thank you, ${firstName}! Your offer has been recorded.</h2><a href="/offhelp">Go Back</a>`);
+  } catch (err) {
+    console.error("Error saving volunteer:", err);
+    res.status(500).send("❌ Internal Server Error. Please try again.");
+  }
+});
+
 
 
 // app.post("/location", (req, res) => {
