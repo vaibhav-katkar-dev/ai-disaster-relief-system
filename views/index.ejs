@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
   <title>Realistic Route & Distance</title>
@@ -70,5 +70,348 @@
     });
   </script>
   
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergency Aid Now</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header .logo {
+            color: #d32f2f;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 0;
+        }
+        .header .nav {
+            display: flex;
+            align-items: center;
+        }
+        .header .nav a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #1a0dab;
+            font-weight: 500;
+            font-size: 1em;
+        }
+        .header .nav .login-btn {
+            background-color: #1a0dab;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-left: 20px;
+        }
+        .header .nav .login-btn:hover {
+            background-color: #163a7a;
+        }
+        .content {
+            padding: 40px 20px;
+            text-align: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .title {
+            color: #d32f2f;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .description {
+            color: #6c757d;
+            font-size: 1.1em;
+            margin-bottom: 30px;
+        }
+        .buttons .btn {
+            background-color: #1a2a44;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            margin: 0 15px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .buttons .btn:hover {
+            background-color: #13263d;
+        }
+        .map-section {
+            margin-top: 40px;
+        }
+        .map-placeholder {
+            height: 300px;
+            background-color: #f1f1f1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .legend span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9em;
+        }
+        .view-map-btn {
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #1a2a44;
+            transition: background-color 0.3s;
+        }
+        .view-map-btn:hover {
+            background-color: #e0e0e0;
+        }
+        .status-section {
+            margin-top: 40px;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .status-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .status-card h3 {
+            color: #1a2a44;
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+        .status-card p {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .how-it-works {
+            margin-top: 40px;
+            padding: 40px 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+        }
+        .how-it-works h2 {
+            color: #1a2a44;
+            margin-bottom: 20px;
+        }
+        .how-it-works-items {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .how-it-works-item {
+            flex: 1;
+            min-width: 200px;
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .how-it-works-item i {
+            font-size: 2em;
+            color: #1a2a44;
+            margin-bottom: 15px;
+        }
+        .how-it-works-item h3 {
+            color: #1a2a44;
+            margin-bottom: 10px;
+        }
+        .how-it-works-item p {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .footer {
+            background-color: #1a2a44;
+            color: white;
+            padding: 40px 20px;
+            margin-top: 40px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .footer-section h3 {
+            color: #d32f2f;
+            margin-bottom: 15px;
+        }
+        .footer-section a, .footer-section p {
+            color: #e0e0e0;
+            text-decoration: none;
+            display: block;
+            margin: 8px 0;
+            transition: color 0.3s;
+        }
+        .footer-section a:hover {
+            color: white;
+        }
+        .footer-section i {
+            margin-right: 10px;
+        }
+        .footer-bottom {
+            text-align: center;
+            width: 100%;
+            margin-top: 20px;
+            color: #b0b0b0;
+        }
+        .footer-bottom i {
+            color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Emergency Aid Now</div>
+        <div class="nav">
+            <a href="#">Home</a>
+            <a href="#">Request Help</a>
+            <a href="#">Offer Help</a>
+            <a href="#">Dashboard</a>
+            <button class="login-btn">Login</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <h1 class="title">Emergency Aid Now</h1>
+        <p class="description">
+            Connecting people in need with those who can help during emergencies and natural disasters.
+            Request assistance or offer your support to those affected.
+        </p>
+        <div class="buttons">
+            <button class="btn">Request Help</button>
+            <button class="btn">Offer Help</button>
+        </div>
+
+        <div class="map-section">
+            <h2>Real-time Disaster Map</h2>
+            <div class="map-placeholder">
+                Interactive disaster map would load here
+            </div>
+            <button class="view-map-btn">View Full Map</button>
+            <div class="legend">
+                <span><span style="display: inline-block; width: 12px; height: 12px; background-color: #d32f2f; border-radius: 50%;"></span> High Severity</span>
+                <span><span style="display: inline-block; width: 12px; height: 12px; background-color: #ffca28; border-radius: 50%;"></span> Medium Severity</span>
+                <span><span style="display: inline-block; width: 12px; height: 12px; background-color: #0288d1; border-radius: 50%;"></span> Low Severity</span>
+            </div>
+        </div>
+
+        <div class="status-section">
+            <h2>Current Status</h2>
+            <div class="status-grid">
+                <div class="status-card">
+                    <p>Active Help Requests</p>
+                    <h3>127</h3>
+                    <p>↑ 12% vs last week</p>
+                </div>
+                <div class="status-card">
+                    <p>Available Volunteers</p>
+                    <h3>56</h3>
+                    <p>↑ 5% vs last week</p>
+                </div>
+                <div class="status-card">
+                    <p>Successful Aid Deliveries</p>
+                    <h3>42</h3>
+                    <p>↑ 1% vs last week</p>
+                </div>
+                <div class="status-card">
+                    <p>Last Alert Sent</p>
+                    <h3>2 hours ago</h3>
+                </div>
+            </div>
+        </div>
+
+        <div class="how-it-works">
+            <h2>How It Works</h2>
+            <p class="description">
+                Our platform connects those in need with volunteers and organizations that can provide assistance during
+                emergencies and natural disasters.
+            </p>
+            <div class="how-it-works-items">
+                <div class="how-it-works-item">
+                    <i class="fas fa-exclamation-triangle" style="color: #d32f2f;"></i>
+                    <h3>Request Help</h3>
+                    <p>If you're affected by a disaster, submit a request detailing your location and needs.</p>
+                </div>
+                <div class="how-it-works-item">
+                    <i class="fas fa-user" style="color: #1a2a44;"></i>
+                    <h3>Volunteer</h3>
+                    <p>Register as a volunteer to offer your services, resources, or expertise to those in need.</p>
+                </div>
+                <div class="how-it-works-item">
+                    <i class="fas fa-check" style="color: #0288d1;"></i>
+                    <h3>Get Matched</h3>
+                    <p>Our system matches help requests with nearby volunteers who can provide the needed assistance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <div class="footer-section">
+            <h3>Emergency Aid Now</h3>
+            <p>Connecting those in need with those who can help during emergencies and natural disasters.</p>
+        </div>
+        <div class="footer-section">
+            <h3>Quick Links</h3>
+            <a href="#">Home</a>
+            <a href="#">Request Help</a>
+            <a href="#">Offer Help</a>
+            <a href="#">Admin Dashboard</a>
+        </div>
+        <div class="footer-section">
+            <h3>Resources</h3>
+            <a href="#">Emergency Contacts</a>
+            <a href="#">Safety Tips</a>
+            <a href="#">About Us</a>
+            <a href="#">Privacy Policy</a>
+        </div>
+        <div class="footer-section">
+            <h3>Contact</h3>
+            <p><i class="fas fa-envelope"></i> contact@emergencyaidnow.org</p>
+            <p><i class="fas fa-phone"></i> +1 (234) 567-890</p>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 Emergency Aid Now. All rights reserved.</p>
+            <p>Made with <i class="fas fa-heart" style="color: #d32f2f;"></i> for those in need</p>
+        </div>
+    </div>
 </body>
 </html>
