@@ -1,12 +1,9 @@
-
-// server.js
 const express = require('express');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
-
-const Parser = require('rss-parser');
 const cors = require('cors');
+
 const app=express();
 const path= require("path");
 dotenv.config();
@@ -24,17 +21,20 @@ const nodemailer = require("nodemailer");
 
 
 const mongoose = require('mongoose');
-// const volunteerRoutes = require('./routes/volunteer'); // <-- ✅ your route file
+const Parser = require('rss-parser');
+const { marked } = require("marked");
+const path = require("path");
 
+dotenv.config();
+const app = express();
+const parser = new Parser({ headers: { 'User-Agent': 'Mozilla/5.0 (AI-Relief-Agent)' } });
 
-
-// DB Setup
 mongoose.connect("mongodb://127.0.0.1:27017/disasterHelp2", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
 
-// Schema & Model
+// Schemas
 const volunteerSchema = new mongoose.Schema({
   isOrganization: Boolean,
   firstName: String,
@@ -49,12 +49,17 @@ const volunteerSchema = new mongoose.Schema({
 });
 
 const Volunteer = mongoose.model("Volunteer", volunteerSchema);
+const HelpRequest = require("./models/HelpRequest");
+
+const Disaster = require('./models/Disaster'); // Adjust path as needed
 
 
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// Serve static files if needed
+app.use(cors());
 app.use(express.static("public"));
+
 const HelpRequest = require("./models/HelpRequest");
 
 
@@ -103,34 +108,48 @@ const parser = new Parser({
   headers: { 'User-Agent': 'Mozilla/5.0 (AI-Relief-Agent)' },
 });
 // Set EJS as view engine
+
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views")); // Folder where your EJS files live
+app.set("views", path.join(__dirname, "views"));
+// const Disaster = require('./models/Disaster');
+// const Disaster = require('./models/Disaster'); // Adjust path as needed
 
-app.use(cors());
-app.use(express.json());
-// app.use('/api', volunteerRoutes); // now all routes inside volunteer.js will be prefixed with /api
-app.get("/",(req,res)=>{
-  res.render("index.ejs")
-})
-app.get("/map",(req,res)=>{
-  res.render("home.ejs");
-});
-// Routes
-const riskModelRoutes = require('./routes/riskModel');
-app.use('/api/risk', riskModelRoutes);
+// app.get('/api/disasters', async (req, res) => {
+//   try {
+//     const disasters = await Disaster.find({});
+//     res.json(disasters);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   }
+// });
 
-// app.get("/dashboard",async(req,res)=>{
-//   const reqdata = await HelpRequest.find();
-//   console.log(reqdata);
-//   res.render("dashboard.ejs",{reqdata});
-// })
+const cities = [
+  { name: "Mumbai", lat: 19.076, lng: 72.8777 },
+  { name: "Delhi", lat: 28.6139, lng: 77.209 },
+  { name: "Chennai", lat: 13.0827, lng: 80.2707 },
+  { name: "Kolkata", lat: 22.5726, lng: 88.3639 },
+  { name: "Bengaluru", lat: 12.9716, lng: 77.5946 },
+  { name: "Hyderabad", lat: 17.385, lng: 78.4867 },
+  { name: "Pune", lat: 18.5204, lng: 73.8567 },
+  { name: "Ahmedabad", lat: 23.0225, lng: 72.5714 },
+  { name: "Jaipur", lat: 26.9124, lng: 75.7873 },
+  { name: "Lucknow", lat: 26.8467, lng: 80.9462 },
+  { name: "Patna", lat: 25.5941, lng: 85.1376 },
+  { name: "Bhopal", lat: 23.2599, lng: 77.4126 },
+  { name: "Nagpur", lat: 21.1458, lng: 79.0882 },
+  { name: "Surat", lat: 21.1702, lng: 72.8311 },
+  { name: "Visakhapatnam", lat: 17.6868, lng: 83.2185 }
+];
 
+const disasterTypes = ["Flood", "Earthquake", "Cyclone", "Heatwave", "Landslide"];
 
-
-const reverseGeocode = require("./utils/reverseGeocode");
-
-app.get("/dashboard", async (req, res) => {
-  const reqdata = await HelpRequest.find();
+function getRandomSeverity() {
+  const roll = Math.random();
+  if (roll < 0.2) return "High";
+  if (roll < 0.5) return "Medium";
+  return "Low";
+}
 
   // Add location names
   const enrichedData = await Promise.all(reqdata.map(async (item) => {
@@ -143,92 +162,102 @@ app.get("/dashboard", async (req, res) => {
   }));
   const count = await HelpRequest.countDocuments();
   res.render("dashboard.ejs", { reqdata: enrichedData ,count});
+
+app.get('/api/disasters/grouped', (req, res) => {
+  const grouped = { High: [], Medium: [], Low: [] };
+
+  cities.forEach(city => {
+    const chanceOfDisaster = Math.random();
+    if (chanceOfDisaster < 0.6) { // 60% cities affected
+      const severity = getRandomSeverity();
+      const type = disasterTypes[Math.floor(Math.random() * disasterTypes.length)];
+
+      grouped[severity].push({
+        city: city.name,
+        location: { lat: city.lat, lng: city.lng },
+        severity,
+        type,
+        timestamp: new Date()
+      });
+    }
+  });
+
+  res.json(grouped);
+
 });
 
 
-
-app.get("/dashboard/login",(req,res)=>{
-  res.render("admin_login.ejs")
-})
-
-
-
-
-app.get("/reqhelp",(req,res)=>{
-  res.render("reqHelp")
-})
-
+// Utility functions
+const reverseGeocode = require("./utils/reverseGeocode");
 
 function getLatLon(locationStr) {
-  if (typeof locationStr !== "string") return null; // 🛡️ Safe check added
+  if (typeof locationStr !== "string") return null;
   const match = locationStr.match(/Lat:\s*([-.\d]+),\s*Lon:\s*([-.\d]+)/);
   return match ? { lat: parseFloat(match[1]), lon: parseFloat(match[2]) } : null;
 }
 
-
 function calculateDistanceKm(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Radius of Earth in km
+  const R = 6371;
   const dLat = (lat2 - lat1) * Math.PI / 180;
   const dLon = (lon2 - lon1) * Math.PI / 180;
-
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1 * Math.PI / 180) *
-    Math.cos(lat2 * Math.PI / 180) *
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
     Math.sin(dLon / 2) ** 2;
-
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
 
+// Routes
+app.get("/", async(req, res) =>{ 
+  
+  const requests = await HelpRequest.countDocuments();
+  const volunteers = await Volunteer.countDocuments();
+  const deliveries = Math.floor(requests * 0.3);
+
+  res.render('index', { requests, volunteers, deliveries });
+  // res.render("index.ejs")
+
+});
+app.get("/map", (req, res) => res.render("home.ejs"));
+app.get("/dashboard/login", (req, res) => res.render("admin_login.ejs"));
+app.get("/reqhelp", (req, res) => res.render("reqHelp"));
+app.get("/offhelp", (req, res) => res.render("offerHelp"));
+
+// Dashboard with location names
+app.get("/dashboard", async (req, res) => {
+  const reqdata = await HelpRequest.find();
+  const enrichedData = await Promise.all(reqdata.map(async (item) => {
+    const [lat, lon] = item.location.match(/[-+]?[0-9]*\.?[0-9]+/g);
+    const locationName = await reverseGeocode(lat, lon);
+    return { ...item.toObject(), locationName };
+  }));
+  res.render("dashboard.ejs", { reqdata: enrichedData });
+});
+
+// Submit Help Request
 app.post("/reqhelp", async (req, res) => {
   try {
-    const {
-      fullName,
-      location,
-      phone,
-      helpType,
-      peopleCount,
-      description
-    } = req.body;
-
-    const newRequest = new HelpRequest({
-      fullName,
-      location,
-      phone,
-      helpType,
-      peopleCount,
-      description
-    });
-
+    const { fullName, location, phone, helpType, peopleCount, description } = req.body;
+    const newRequest = new HelpRequest({ fullName, location, phone, helpType, peopleCount, description });
     await newRequest.save();
     console.log("✅ Help request saved:", newRequest);
 
     const requestLoc = getLatLon(location);
-    if (!requestLoc) {
-      console.log("❌ Invalid request location format:", location);
-      return res.status(400).send("❌ Invalid location format. Use: 'Lat: 18.5204, Lon: 73.8567'");
-    }
+    if (!requestLoc) return res.status(400).send("❌ Invalid location format. Use: 'Lat: 18.5204, Lon: 73.8567'");
 
     const volunteers = await Volunteer.find();
     let matched = false;
 
     for (const volunteer of volunteers) {
       const volunteerLoc = getLatLon(volunteer.location);
-      if (!volunteerLoc) {
-        console.log(`⚠️ Skipped volunteer with invalid location: ${volunteer.location}`);
-        continue;
-      }
-      
-      const distance = calculateDistanceKm(
-        volunteerLoc.lat, volunteerLoc.lon,
-        requestLoc.lat, requestLoc.lon
-      );
+      if (!volunteerLoc) continue;
 
+      const distance = calculateDistanceKm(volunteerLoc.lat, volunteerLoc.lon, requestLoc.lat, requestLoc.lon);
       const canTravel = parseFloat(volunteer.travelRange || "0");
       const isHelpTypeMatch = (volunteer.assistance || "").toLowerCase() === helpType.toLowerCase();
 
       if (distance <= canTravel && isHelpTypeMatch) {
+
         const updatedDoc = await HelpRequest.findByIdAndUpdate(
           newRequest._id,
           { status: "Assigned" },
@@ -238,315 +267,145 @@ app.post("/reqhelp", async (req, res) => {
         console.log(updatedDoc);
         let volEmail=volunteer.email;
         sendemail(volEmail,helpType,fullName,distance,location,peopleCount,phone,description);
+
+        await HelpRequest.findByIdAndUpdate(newRequest._id, { status: "Assigned" });
+
         matched = true;
-        console.log("✅ Match Found");
-        console.log(`→ Help Needed: ${helpType}`);
-        console.log(`→ Request By : ${fullName} (${phone})`);
-        console.log(`→ Location    : ${location}`);
-        console.log(`→ Volunteer   : ${volunteer.firstName} ${volunteer.lastName} (${volunteer.phone})`);
-        console.log(`→ Skills      : ${volunteer.skills}`);
-        console.log(`→ Distance    : ${distance.toFixed(2)} km`);
-        console.log(`→ Travel Limit: ${canTravel} km`);
-        console.log("---------------------------");
+
+        console.log(`✅ Match Found\n→ Volunteer: ${volunteer.firstName} ${volunteer.lastName}\n→ Distance: ${distance.toFixed(2)} km`);
+        break;
       }
     }
 
-    if (!matched) {
-      console.log("❌ No matching volunteer found for this request.");
-    }
-
-    res.send(`<h2>✅ Help request submitted successfully, ${fullName}!</h2><a href="/reqhelp">Submit another request</a>`);
-  } catch (err) {
+    if (!matched) console.log("❌ No matching volunteer found.");
+    res.send(`
+      <h2>✅ Thank you, ${fullName}! Your offer has been recorded.</h2>
+      <p>You will be redirected shortly...</p>
+      <script>
+        setTimeout(() => {
+          window.location.href = "/?success=offered";
+        }, 1000); // Redirect after 3 seconds
+      </script>
+    `);  } catch (err) {
     console.error("❌ Error saving help request:", err);
-    res.status(500).send("❌ Internal Server Error. Please try again.");
+    res.status(500).send("❌ Internal Server Error.");
   }
 });
 
-
-
-app.get("/offhelp",(req,res)=>{
-  res.render("offerHelp")
-})
+// Submit Offer to Help
 app.post("/offhelp", async (req, res) => {
   try {
     const {
-      orgCheck,
-      firstName,
-      lastName,
-      location,
-      phone,
-      email,
-      assistance,
-      availability,
-      skills,
-      travelRange
+      orgCheck, firstName, lastName, location,
+      phone, email, assistance, availability,
+      skills, travelRange
     } = req.body;
 
     const newVolunteer = new Volunteer({
-      isOrganization: orgCheck === "on", // Checkbox returns "on" if checked
-      firstName,
-      lastName,
-      location,
-      phone,
-      email,
-      assistance,
-      availability,
-      skills,
-      travelRange
+      isOrganization: orgCheck === "on",
+      firstName, lastName, location,
+      phone, email, assistance,
+      availability, skills, travelRange
     });
 
-    await newVolunteer.save().then((a)=>console.log("Stoerd",a)).catch((err)=>console.log("er",err));
-    // console.log( {
-    //   orgCheck,
-    //   firstName,
-    //   lastName,
-    //   location,
-    //   phone,
-    //   email,
-    //   assistance,
-    //   availability,
-    //   skills,
-    //   travelRange
-    // })
-    res.send(`<h2>✅ Thank you, ${firstName}! Your offer has been recorded.</h2><a href="/offhelp">Go Back</a>`);
-  } catch (err) {
+    await newVolunteer.save();
+    // res.redirect("/");
+    res.send(`
+      <h2>✅ Thank you, ${firstName}! Your offer has been recorded.</h2>
+      <p>You will be redirected shortly...</p>
+      <script>
+        setTimeout(() => {
+          window.location.href = "/?success=offered";
+        }, 1000); // Redirect after 3 seconds
+      </script>
+    `);
+      } catch (err) {
     console.error("Error saving volunteer:", err);
-    res.status(500).send("❌ Internal Server Error. Please try again.");
+    res.status(500).send("❌ Internal Server Error.");
   }
 });
 
-
-
-// app.post("/location", (req, res) => {
-//     const { lat, lon } = req.body || {}; // fallback to empty object
-//     if (!lat || !lon) {
-//       return res.status(400).json({ error: "Latitude and longitude are required." });
-//     }
-  
-//     console.log("📍 Received location from frontend:", lat, lon);
-//     res.json({ status: "Location received", lat, lon });
-//   });
-  
-const { marked } = require("marked"); // add this at the top of the file
-
+// Report Page
 app.get('/location', async (req, res) => {
   try {
     const response = await axios.get('http://ip-api.com/json');
-
-    const disaster = "flood";
     const data = {
       city: response.data.city,
       region: response.data.regionName,
       country: response.data.country,
       lat: response.data.lat,
-      lon: response.data.lon,
+      lon: response.data.lon
     };
 
-    const newsData = await news(data.city, disaster);
+    const newsData = await news(data.city, "flood");
     const weatherData = await weather(data.city);
-    const tweets = await twitter(disaster, data.lat, data.lon, "10km");
-
-    // Get Gemini AI response
+    const tweets = await twitter("flood", data.lat, data.lon, "10km");
     const raw = await gemini({ location: data, tweets, news: newsData, weather: weatherData });
-    console.log("🌐 RAW Response:", raw);
 
-    let markdownRaw;
-
-    // If it's a string, process it as markdown
-    if (typeof raw.suggestions === "string") {
-      markdownRaw = raw.suggestions;
-    } else {
-      markdownRaw = JSON.stringify(raw, null, 2); // fallback to displaying JSON
-    }
-
-    // Convert Markdown to HTML
+    const markdownRaw = typeof raw.suggestions === "string" ? raw.suggestions : JSON.stringify(raw, null, 2);
     const htmlOutput = marked.parse(markdownRaw);
-
-    // Render the view with HTML content
     return res.render("Report.ejs", { data, jdata: htmlOutput });
 
   } catch (error) {
     console.error("❌ Error in /location:", error.message);
-    if (!res.headersSent) {
-      return res.status(500).send("Internal Server Error");
-    }
+    if (!res.headersSent) return res.status(500).send("Internal Server Error");
   }
 });
 
-
+// Simulated Gemini AI response
 async function gemini({ location, tweets, news, weather }) {
-  // 🧪 Simulated fallback data
   const simulatedTweets = [
-    "Water levels rising rapidly near Sinhagad Road.",
-    "Multiple vehicles stuck in Kothrud underpass due to flooding!",
-    "Pune University Road completely waterlogged. Avoid the route.",
-    "Rain hasn't stopped since last night, Hadapsar residents seek help.",
-    "Low-lying areas near Deccan flooded – people stranded on rooftops."
+    "Water levels rising near Sinhagad Road.",
+    "Multiple vehicles stuck in Kothrud underpass.",
+    "Pune University Road flooded. Avoid the area.",
+    "Continuous rain in Hadapsar.",
+    "Deccan flooded – people stranded."
   ];
 
-  const simulatedWeather = [
-    {
-      temperature: "22°C",
-      condition: "Heavy Rain",
-      humidity: "95%",
-      windSpeed: "12 km/h",
-      alert: "Red alert issued by IMD for Pune region"
-    }
-  ];
-
+  const simulatedWeather = [{ temperature: "22°C", condition: "Heavy Rain", humidity: "95%", windSpeed: "12 km/h", alert: "Red alert issued by IMD for Pune" }];
   const simulatedNews = [
-    "Floods wreak havoc in Pune as rains continue unabated.",
-    "Local authorities deploy rescue teams in low-lying areas.",
-    "Schools and colleges shut across Pune district.",
-    "Power outages in multiple areas due to flooding.",
-    "IMD forecasts more rainfall for the next 48 hours."
+    "Floods cause havoc in Pune.",
+    "Rescue teams deployed.",
+    "Schools shut due to waterlogging.",
+    "Power outages reported.",
+    "Heavy rainfall forecasted for 48 hrs."
   ];
 
-  const simulatedVolunteers = [
-    { name: "Amit", skill: "First Aid", lat: 18.5204, lon: 73.8567 },
-    { name: "Sneha", skill: "Food Distribution", lat: 18.509, lon: 73.855 },
-    { name: "Ravi", skill: "Rescue Operations", lat: 18.5301, lon: 73.8702 }
-  ];
+  const response = {
+    suggestions: `
+### 🛟 Disaster Relief Summary
 
-  const simulatedNGOs = [
-    { name: "Relief Pune", contact: "9876543210", area: "Kothrud" },
-    { name: "Hope Foundation", contact: "9765432109", area: "Hadapsar" }
-  ];
+**📍 Location**: ${location.city}, ${location.region}, ${location.country}
 
-  const simulatedRiskZones = [
-    { zone: "Sinhagad Road", riskLevel: "High" },
-    { zone: "Deccan", riskLevel: "Medium" },
-    { zone: "Kothrud", riskLevel: "High" },
-    { zone: "Wakad", riskLevel: "Low" }
-  ];
+**🌧️ Weather**: ${weather[0]?.condition || simulatedWeather[0].condition}
 
-  // 🧠 Use real or simulated data (fallback logic)
-  const safeTweets = Array.isArray(tweets) && tweets.length > 0 ? tweets : simulatedTweets;
-  const safeWeather = Array.isArray(weather) && weather.length > 0 ? weather : simulatedWeather;
-  const safeNews = Array.isArray(news) && news.length > 0 ? news : simulatedNews;
+**📢 Alerts**:
+- ${weather[0]?.alert || simulatedWeather[0].alert}
+- ${news[0] || simulatedNews[0]}
 
-  const safeVolunteers = simulatedVolunteers; // Extend for real-time logic later
-  const safeNGOs = simulatedNGOs;
-  const safeRiskZones = simulatedRiskZones;
+**📲 Social Media Reports**:
+${(tweets || simulatedTweets).map(t => `- ${t}`).join('\n')}
 
-  // 🧾 Format data
-  const formattedTweets = safeTweets.join("\n");
-  const formattedWeather = safeWeather.map(w => 
-    `Temperature: ${w.temperature}, Condition: ${w.condition}, Humidity: ${w.humidity}, Wind: ${w.windSpeed}, Alert: ${w.alert}`
-  ).join("\n");
-
-  const formattedNews = safeNews.map((n, i) => `News ${i + 1}: ${n.title || n}`).join("\n");
-  const formattedVolunteers = JSON.stringify(safeVolunteers, null, 2);
-  const formattedNGOs = JSON.stringify(safeNGOs, null, 2);
-  const formattedRiskZones = JSON.stringify(safeRiskZones, null, 2);
-
-  // 🪄 Gemini Prompt
-  const prompt = `
-📍 **Disaster Situation Analysis: ${location.city || "Pune"} (Flood)**
-
-🌧️ **Weather Data**:
-${formattedWeather}
-
-📲 **Social Media Signals (Tweets)**:
-${formattedTweets}
-
-🗞️ **News Reports**:
-${formattedNews}
-
-🧑‍🤝‍🧑 **Volunteer Info**:
-${formattedVolunteers}
-
-🏥 **NGO Support**:
-${formattedNGOs}
-
-🧭 **Flood Risk Zones**:
-${formattedRiskZones}
-
----
-
-Please provide:
-1. 🔍 Real-Time Damage Assessment  
-2. 🚚 Optimal Aid Distribution Routes  
-3. 🧑‍🤝‍🧑 Volunteer and NGO Coordination  
-4. 🔮 Predictive Risk Modeling  
-5. 📊 Overall Model Confidence (0–100%)  
-6. 🧠 Short reasoning for each insight.
-`;
-
-  try {
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
-      {
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }]
-          }
-        ]
-      }
-    );
-
-    const text = response.data.candidates?.[0]?.content?.parts?.[0]?.text || "No suggestions.";
-    return { suggestions: text };
-
-  } catch (err) {
-    console.error("❌ Gemini API Error:", err.response?.data || err.message);
-    return { suggestions: "{}" };
-  }
+**✅ Recommendations**:
+- Avoid low-lying areas
+- Contact local NGOs
+- Keep emergency contacts handy
+`
+  };
+  return response;
 }
 
-
- async function weather(city){
-    try {
-        // const city = city;
-        const response = await axios.get(
-          `http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHER_API_KEY}&q=${city}`
-        );
-        const data = {
-          location: response.data.location.name,
-          region: response.data.location.region,
-          temp_c: response.data.current.temp_c,
-          condition: response.data.current.condition.text,
-          wind_kph: response.data.current.wind_kph,
-        };
-        // console.log("🌦️ Weather Data:", data);
-        // res.json(data);
-      } catch (err) {
-        console.error("❌ Weather API Error:", err.message);
-        // res.status(500).json({ error: 'Weather API failed' });
-      }
+// Dummy handlers (replace with real ones if you have logic)
+async function news(city, disaster) {
+  return [`Major ${disaster} in ${city}`, "Rescue teams on alert"];
+}
+async function weather(city) {
+  return [{ condition: "Heavy Rain", alert: "Flood warning in effect" }];
+}
+async function twitter(topic, lat, lon, radius) {
+  return ["Tweet 1 about " + topic, "Tweet 2 near your location"];
 }
 
-
-
-
-async function twitter(keyword, latitude, longitude, radius = '10km', res) {
-  try {
-    const geoQuery = `point_radius:[${longitude} ${latitude} ${radius}]`;
-
-    const response = await axios.get(
-      `https://api.twitter.com/2/tweets/search/recent?query=${encodeURIComponent(`${keyword} ${geoQuery}`)}&max_results=10&tweet.fields=created_at,author_id,geo`,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.TWITTER_BEARER}`,
-        },
-      }
-    );
-
-    const tweets = response.data.data?.map(tweet => ({
-      id: tweet.id,
-      text: tweet.text,
-      author: tweet.author_id,
-      date: tweet.created_at,
-    })) || [];
-
-    // console.log("🕎 Tweets:", tweets);
-    res.json({ keyword, tweets });
-  } catch (err) {
-    console.error('❌ Twitter API Error:', err.response?.data || err.message);
-    // res.status(500).json({ error: 'Twitter API failed' });
-  }
-}
 
 
 
@@ -602,4 +461,7 @@ app.listen(PORT, () => {
 });
 
 
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
 
