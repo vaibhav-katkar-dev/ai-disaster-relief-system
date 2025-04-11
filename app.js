@@ -30,6 +30,12 @@ app.use(express.json());
 app.get("/",(req,res)=>{
     res.render("index.ejs")
 })
+app.get("/dashboard/login",(req,res)=>{
+  res.render("admin_login.ejs")
+})
+app.get("/dashboard",(req,res)=>{
+  res.render("dashboard.ejs")
+})
 
 
 // app.post("/location", (req, res) => {
