@@ -3,6 +3,23 @@ const axios = require('axios');
 const dotenv = require('dotenv');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+
+const app=express();
+const path= require("path");
+dotenv.config();
+const nodemailer = require("nodemailer");
+
+// server.js
+// // const express = require('express');
+// const axios = require('axios');
+// const dotenv = require('dotenv');
+// const Parser = require('rss-parser');
+// const cors = require('cors');
+// // const app=express();
+// const path= require("path");
+// dotenv.config();
+
+
 const mongoose = require('mongoose');
 const Parser = require('rss-parser');
 const { marked } = require("marked");
@@ -42,6 +59,56 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(express.static("public"));
+
+const HelpRequest = require("./models/HelpRequest");
+
+
+
+
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false, // true for port 465, false for other ports
+  auth: {
+    user: "maheshs.thombare@gmail.com",
+    pass: "gqpf efvj lgpn sova",
+  },
+  tls: {
+    rejectUnauthorized: false, // Ignore self-signed certificate error
+  },
+});
+// async..await is not allowed in global scope, must use a wrapper
+async function sendemail(to,helpType,fullName,distance,location,peopleCount,phone,description) {
+  try {
+    const info = await transporter.sendMail({
+      from: '"Mahesh👻" <maheshs.thombare@gmail.com>',
+      to,
+      subject: "For verification",
+      text: "gqpf efvj lgpn sova",
+      html: "<b>Hello Volunteer,</b><br><br>You have been <b>assigned a new help request</b> in your area. Here are the details:<br><br><b>Requester Name:</b>"+fullName+" <br><b>Location:</b>"+location+"<br><b>Phone:</b> "+phone+"<br><b>Type of Help Needed:</b> "+helpType+"<br><b>Number of People:</b> "+peopleCount+"<br><b>Description:</b> "+description+"<br><br>Please reach out to the requester as soon as possible and confirm their safety.<br><br>Thank you for your continued support and compassion! 💪<br><br>Warm regards,<br><b>Disaster Relief Team</b>",
+    });
+    console.log("Message sent: %s", info.messageId);
+  } catch (error) {
+    console.error("Email sending failed:", error.message);
+  }
+}
+
+app.get("/email", (req, res) => {
+  const recipient = "learnwithmst07@gmail.com";
+  sendemail(recipient); // don't await
+  res.render("index.ejs");
+});
+
+
+
+
+// const app = express();
+const PORT = process.env.PORT || 5000;
+const parser = new Parser({
+  headers: { 'User-Agent': 'Mozilla/5.0 (AI-Relief-Agent)' },
+});
+// Set EJS as view engine
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 // const Disaster = require('./models/Disaster');
@@ -84,6 +151,18 @@ function getRandomSeverity() {
   return "Low";
 }
 
+  // Add location names
+  const enrichedData = await Promise.all(reqdata.map(async (item) => {
+    const [lat, lon] = item.location.match(/[-+]?[0-9]*\.?[0-9]+/g); // Extract lat & lon
+    const locationName = await reverseGeocode(lat, lon);
+    return {
+      ...item.toObject(), // convert mongoose document to plain JS object
+      locationName
+    };
+  }));
+  const count = await HelpRequest.countDocuments();
+  res.render("dashboard.ejs", { reqdata: enrichedData ,count});
+
 app.get('/api/disasters/grouped', (req, res) => {
   const grouped = { High: [], Medium: [], Low: [] };
 
@@ -104,6 +183,7 @@ app.get('/api/disasters/grouped', (req, res) => {
   });
 
   res.json(grouped);
+
 });
 
 
@@ -177,7 +257,19 @@ app.post("/reqhelp", async (req, res) => {
       const isHelpTypeMatch = (volunteer.assistance || "").toLowerCase() === helpType.toLowerCase();
 
       if (distance <= canTravel && isHelpTypeMatch) {
+
+        const updatedDoc = await HelpRequest.findByIdAndUpdate(
+          newRequest._id,
+          { status: "Assigned" },
+          { new: true } // return the updated document
+        );
+        
+        console.log(updatedDoc);
+        let volEmail=volunteer.email;
+        sendemail(volEmail,helpType,fullName,distance,location,peopleCount,phone,description);
+
         await HelpRequest.findByIdAndUpdate(newRequest._id, { status: "Assigned" });
+
         matched = true;
 
         console.log(`✅ Match Found\n→ Volunteer: ${volunteer.firstName} ${volunteer.lastName}\n→ Distance: ${distance.toFixed(2)} km`);
@@ -314,5 +406,62 @@ async function twitter(topic, lat, lon, radius) {
   return ["Tweet 1 about " + topic, "Tweet 2 near your location"];
 }
 
+
+
+
+
+// const Parser = require('rss-parser');
+// const parser = new Parser();
+
+async function news(city, disaster) {
+    const keyword = `${disaster} in ${city}`;  // Example: "Flood in Mumbai"
+    const url = `https://news.google.com/rss/search?q=${encodeURIComponent(keyword)}&hl=en-IN&gl=IN&ceid=IN:en`;
+  
+    try {
+      const feed = await parser.parseURL(url);
+  
+      const articles = (feed.items || [])
+        .slice(0, 10)
+        .map((item, index) => ({
+          title: item.title || 'No title',
+          link: item.link || '#',
+          date: item.pubDate || 'No date',
+          summary: item.contentSnippet
+            ? item.contentSnippet.length > 200
+              ? item.contentSnippet.substring(0, 200) + "..."
+              : item.contentSnippet
+            : 'No summary available',
+          source: 'Google News',
+        }));
+  
+      console.log(`🗺️ Showing latest ${articles.length} news articles about "${disaster}" in "${city}"`);
+      // articles.forEach(article => {
+      //   console.log(`\n📰 ${article.index}. ${article.title}`);
+      //   console.log(`📅 ${article.date}`);
+      //   console.log(`🔗 ${article.link}`);
+      //   console.log(`📝 ${article.summary}\n`);
+      // });
+  
+      console.log(articles);
+      return articles;
+    } catch (err) {
+      console.error('❌ Error fetching city-specific news:', err.message);
+      return [];
+    }
+  }
+// 🏠 Root
+// app.get('/', (req, res) => {
+//   res.send('🌍 Welcome to the AI-Powered Disaster Relief API');
+// });
+
+
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
+
+
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+
