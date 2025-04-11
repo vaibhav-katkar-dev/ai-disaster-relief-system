@@ -56,6 +56,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 const HelpRequest = require("./models/HelpRequest");
 
+
 // const app = express();
 const PORT = process.env.PORT || 5000;
 const parser = new Parser({
@@ -68,18 +69,23 @@ app.set("views", path.join(__dirname, "views")); // Folder where your EJS files 
 app.use(cors());
 app.use(express.json());
 // app.use('/api', volunteerRoutes); // now all routes inside volunteer.js will be prefixed with /api
-
-
-
 app.get("/",(req,res)=>{
-    res.render("index.ejs")
+  res.render("index.ejs")
 })
+app.get("/map",(req,res)=>{
+  res.render("home.ejs");
+});
+// Routes
+const riskModelRoutes = require('./routes/riskModel');
+app.use('/api/risk', riskModelRoutes);
 
 // app.get("/dashboard",async(req,res)=>{
 //   const reqdata = await HelpRequest.find();
 //   console.log(reqdata);
 //   res.render("dashboard.ejs",{reqdata});
 // })
+
+
 
 const reverseGeocode = require("./utils/reverseGeocode");
 
@@ -100,9 +106,13 @@ app.get("/dashboard", async (req, res) => {
 });
 
 
+
 app.get("/dashboard/login",(req,res)=>{
   res.render("admin_login.ejs")
 })
+
+
+
 
 app.get("/reqhelp",(req,res)=>{
   res.render("reqHelp")

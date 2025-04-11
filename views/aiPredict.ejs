@@ -1,0 +1,27 @@
+<!-- views/aiPredict.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI-Powered Predictive Risk Zones</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; padding: 2rem; background: #f7f7f7; }
+    .zone { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
+    h1 { color: #333; }
+  </style>
+</head>
+<body>
+  <h1>🔥 AI-Powered Top 10 High-Risk Zones</h1>
+
+  <% zones.forEach((z, i) => { %>
+    <div class="zone">
+      <h2><%= i + 1 %>. <%= z.name %></h2>
+      <p><strong>Risk Score:</strong> <%= z.riskScore %></p>
+      <p>Population Density: <%= z.populationDensity %>/km²</p>
+      <p>Disasters (5 yrs): <%= z.historicalDisasters %></p>
+      <p>Weather Severity Index: <%= z.weatherSeverityIndex %></p>
+      <p>Infrastructure Score: <%= z.infrastructureScore %></p>
+    </div>
+  <% }); %>
+</body>
+</html>
