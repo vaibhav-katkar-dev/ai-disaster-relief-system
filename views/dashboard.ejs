@@ -254,17 +254,17 @@
             <div class="stat-card">
                 <i class="fas fa-users"></i>
                 <h3><%= requests %></h3>
-                <!-- <p>Help Requests<br>↑ 12% vs last week</p> -->
+                <p>Help Requests</p>
             </div>
             <div class="stat-card">
                 <i class="fas fa-user"></i>
                 <h3><%= volunteers %></h3>
-                <!-- <p>Volunteers<br>↑ 5% vs last week</p> -->
+                <p>Volunteers</p>
             </div>
             <div class="stat-card">
                 <i class="fas fa-check"></i>
                 <h3><%= deliveries %></h3>
-                <!-- <p>Matched Pairs<br>↑ 8% vs last week</p>. -->
+                <p>Matched Pairs</p>.
             </div>
             
         </div>
@@ -303,7 +303,7 @@
                         <th>Location</th>
                         <th>Type</th>
                         <th>Status</th>
-                        <th>Actions</th>
+                        <!-- <th>Actions</th> -->
                     </tr>
                 </thead>
                 <tbody>
@@ -314,12 +314,12 @@
                               <td><%= item.locationName %></td>
                               <td><%= item.helpType %></td>
                               <td><span class="<%= item.status === 'pending' ? 'status-pending' : (item.status === 'Assigned' ? 'status-assigned' : '') %>"><%= item.status %></span></td>
-                              <td><a href="#">View</a> | <a href="#">Assign</a></td>
+                              <!-- <td><a href="#">View</a> | <a href="#">Assign</a></td> -->
                             </tr>
                           <% }) %>
                        
                     
-                    <tr>
+                    <!-- <tr>
                         <td>Sarah Smith</td>
                         <td>Bangalore</td>
                         <td>Medical</td>
@@ -346,7 +346,7 @@
                         <td>Food</td>
                         <td><span class="status-completed">Completed</span></td>
                         <td><a href="#">View</a> | <a href="#">Assign</a></td>
-                    </tr>
+                    </tr> -->
                 </tbody>
             </table>
         </div>
