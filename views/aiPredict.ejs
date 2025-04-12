@@ -1,27 +1,242 @@
-<!-- views/aiPredict.ejs -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>AI-Powered Predictive Risk Zones</title>
+  <title>AI-Powered Risk Prediction</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { font-family: 'Segoe UI', sans-serif; padding: 2rem; background: #f7f7f7; }
-    .zone { background: #fff; padding: 1rem; margin-bottom: 1rem; border-radius: 10px; box-shadow: 0 0 5px rgba(0,0,0,0.1); }
-    h1 { color: #333; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      color: #333;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2.5rem;
+      background: linear-gradient(to right, #ff416c, #ff4b2b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .zones-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .zone-card {
+      background-color: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .zone-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .zone-card h2 {
+      margin-top: 0;
+      color: #222;
+    }
+
+    .zone-card p {
+      margin: 0.4rem 0;
+      font-size: 0.95rem;
+    }
+
+    footer {
+      text-align: center;
+      font-size: 0.85rem;
+      color: #555;
+      margin-top: 3rem;
+    }
+
+    footer a {
+      color: #0077cc;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+    /* Header Wrapper */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+/* Logo */
+.logo {
+  font-size: 1.6rem;
+  font-weight: bold;
+  color: #ff4b2b;
+  font-family: 'Segoe UI', sans-serif;
+  letter-spacing: 1px;
+}
+
+/* Navigation Links */
+.nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  font-size: 1rem;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+/* Hover Effect */
+.nav a::after {
+  content: '';
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -3px;
+  left: 0;
+  background-color: #ff4b2b;
+  transition: width 0.3s ease;
+}
+
+.nav a:hover {
+  color: #ff4b2b;
+}
+
+.nav a:hover::after {
+  width: 100%;
+}
+
+/* Optional: Mobile-friendly */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav {
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+  }
+}
+/* Headline Gradient */
+.title, .how-it-works h2, .status-section h2 {
+  background: linear-gradient(to right, #ff416c, #ff4b2b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: bold;
+}
+
+/* Card-like consistency */
+.status-card,
+.how-it-works-item {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.status-card:hover,
+.how-it-works-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Button tweaks */
+.buttons .btn {
+  background: linear-gradient(to right, #ff416c, #ff4b2b);
+  border: none;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.buttons .btn:hover {
+  background: linear-gradient(to right, #ff4b2b, #ff416c);
+}
+
+/* View Map Button */
+.view-map-btn {
+  background: #fff;
+  color: #ff4b2b;
+  border: 1px solid #ff4b2b;
+  transition: 0.3s ease;
+}
+
+.view-map-btn:hover {
+  background: #ff4b2b;
+  color: #fff;
+}
+
+/* Responsive fixes */
+@media (max-width: 600px) {
+  .buttons {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .buttons .btn {
+    margin: 10px 0;
+  }
+}
+
   </style>
 </head>
 <body>
-  <h1>🔥 AI-Powered Top 10 High-Risk Zones</h1>
+  <div class="header">
+    <div class="logo">Emergency Aid Now</div>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/reqhelp">Request Help</a>
+        <a href="/offhelp">Offer Help</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/api/risk/predict-risk">Risk Zones</a>
+        <a href="/location">Get Report</a>
 
-  <% zones.forEach((z, i) => { %>
-    <div class="zone">
-      <h2><%= i + 1 %>. <%= z.name %></h2>
-      <p><strong>Risk Score:</strong> <%= z.riskScore %></p>
-      <p>Population Density: <%= z.populationDensity %>/km²</p>
-      <p>Disasters (5 yrs): <%= z.historicalDisasters %></p>
-      <p>Weather Severity Index: <%= z.weatherSeverityIndex %></p>
-      <p>Infrastructure Score: <%= z.infrastructureScore %></p>
+
+        <!-- <button class="login-btn">Login</button> -->
     </div>
-  <% }); %>
+</div>
+  <h1>🔥 AI-Powered Top 10 High-Risk Zones in India</h1>
+
+  <div class="zones-container">
+    <% zones.forEach((z, i) => { %>
+      <div class="zone-card">
+        <h2><%= i + 1 %>. <%= z.name %></h2>
+        <p><strong>Risk Score:</strong> <%= z.riskScore %></p>
+        <p><strong>Population Density:</strong> <%= z.populationDensity %> /km²</p>
+        <p><strong>Disasters (Last 5 Years):</strong> <%= z.historicalDisasters %></p>
+        <p><strong>Weather Severity Index:</strong> <%= z.weatherSeverityIndex %></p>
+        <p><strong>Infrastructure Score:</strong> <%= z.infrastructureScore %></p>
+      </div>
+    <% }); %>
+  </div>
+
+  <footer>
+    ⚠️ This is simulated data. For real statistics, refer to 
+    <a href="https://ndma.gov.in" target="_blank">NDMA</a>, 
+    <a href="https://mausam.imd.gov.in" target="_blank">IMD</a>, or 
+    <a href="https://moes.gov.in" target="_blank">MoES</a>.
+  </footer>
+
 </body>
 </html>

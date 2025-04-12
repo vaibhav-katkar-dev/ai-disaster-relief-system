@@ -102,13 +102,91 @@
       margin-top: 40px;
       font-size: 14px;
     }
+    .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff4b2b;
+  font-family: 'Segoe UI', sans-serif;
+  letter-spacing: 1px;
+}
+
+.nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  font-size: 1rem;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -3px;
+  left: 0;
+  background-color: #ff4b2b;
+  transition: width 0.3s ease;
+}
+
+.nav a:hover {
+  color: #ff4b2b;
+}
+
+.nav a:hover::after {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav {
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+  }
+}
+
   </style>
 </head>
 <body>
-
   <div class="header">
-    <span>Emergency Aid Now</span>
-  </div>
+    <div class="logo">Emergency Aid Now</div>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/reqhelp">Request Help</a>
+        <a href="/offhelp">Offer Help</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/api/risk/predict-risk">Risk Zones</a>
+        <a href="/location">Get Report</a>
+
+        
+
+        <!-- <button class="login-btn">Login</button> -->
+    </div>
+</div>
+  
 
   <div class="container">
     <h2>Request Emergency Help</h2>
