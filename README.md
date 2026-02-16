@@ -41,7 +41,21 @@ This project is built using a robust and scalable MERN-based architecture:
 
 ---
 
-## 📸 Screenshots
+## � External APIs & Integrations
+
+The system integrates multiple third-party APIs to enhance functionality and provide real-time data:
+
+- **[Google Gemini API](https://ai.google.dev/)**: Used for AI-driven disaster analysis, risk assessment, and chat assistance.
+- **[WeatherAPI](https://www.weatherapi.com/)**: Fetches real-time weather conditions for disaster-affected areas.
+- **[OpenRouteService API](https://openrouteservice.org/)**: Provides routing and mapping data for logistics and "street map" visualization.
+- **[Google News RSS](https://news.google.com/)**: Aggregates the latest disaster-related news based on location.
+- **[IP-API](https://ip-api.com/)**: Automatically detects user location for quicker reporting.
+- **[Twitter (X) API](https://developer.twitter.com/en/docs/twitter-api)**: Monitors social media for real-time disaster updates and sentiment.
+- **Google Maps**: Used for navigation links and visualizing directions.
+
+---
+
+## �📸 Screenshots
 
 | **Dashboard** | **Home Page** |
 |:---:|:---:|
