@@ -105,7 +105,7 @@ Follow these instructions to set up the project locally on your machine.
 This project was passionately built by:
 
 - **Vaibhav Katkar** - *Full Stack Developer & AI Integration*
-- **Mahesh Thombare** - *Frontend Developer & UI/UX Design*
+- **Mahesh Thombare** - *Full Stack Developer & UI/UX Design*
 
 ---
 
