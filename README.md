@@ -119,7 +119,7 @@ Follow these instructions to set up the project locally on your machine.
 This project was passionately built by:
 
 - **[Vaibhav Katkar](https://github.com/vaibhav-katkar-dev)** - *Full Stack Developer & AI Integration*
-- **[Mahesh Thombare](https://github.com/MaheshThombare07)** - *Frontend Developer & UI/UX Design*
+- **[Mahesh Thombare](https://github.com/MaheshThombare07)** - *Full Stack Developer & UI/UX Design*
 
 ---
 
