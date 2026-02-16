@@ -137,130 +137,132 @@
         font-size: 1.5rem;
       }
     }
+    .header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.logo {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #ff4b2b;
+  font-family: 'Segoe UI', sans-serif;
+  letter-spacing: 1px;
+}
+
+.nav {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav a {
+  text-decoration: none;
+  color: #333;
+  font-weight: 500;
+  font-size: 1rem;
+  position: relative;
+  transition: color 0.3s ease;
+}
+
+.nav a::after {
+  content: '';
+  position: absolute;
+  width: 0%;
+  height: 2px;
+  bottom: -3px;
+  left: 0;
+  background-color: #ff4b2b;
+  transition: width 0.3s ease;
+}
+
+.nav a:hover {
+  color: #ff4b2b;
+}
+
+.nav a:hover::after {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav {
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+  }
+}
+
   </style>
 </head>
 <body>
 
+  <div class="header">
+    <div class="logo">Emergency Aid Now</div>
+    <div class="nav">
+        <a href="/">Home</a>
+        <a href="/reqhelp">Request Help</a>
+        <a href="/offhelp">Offer Help</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/api/risk/predict-risk">Risk Zones</a>
+        <a href="/location">Get Report</a>
 
-  <section id="dashboard">
-    <h2>📊 Disaster Response Dashboard</h2>
-    <div class="dashboard-cards">
-      <div class="card">
-        <h3>High-Risk Zones</h3>
-        <p>Sinhagad, Kothrud, Hadapsar</p>
-      </div>
-      <div class="card">
-        <h3>Volunteers Deployed</h3>
-        <p>3 / 5</p>
-      </div>
-      <div class="card">
-        <h3>Active NGOs</h3>
-        <p>2</p>
-      </div>
-      <div class="card">
-        <h3>Risk Prediction Accuracy</h3>
-        <p>40%</p>
-      </div>
+
+        <!-- <button class="login-btn">Login</button> -->
     </div>
-  </section>
-  <canvas id="riskChart" width="400" height="200"></canvas>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    const ctx = document.getElementById('riskChart');
-    new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: ['April 8', 'April 9', 'April 10', 'April 11'],
-        datasets: [{
-          label: 'Predicted Risk Level',
-          data: [20, 45, 75, 90],
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          borderColor: '#ef4444',
-          borderWidth: 2
-        }]
-      },
-      options: {
-        scales: {
-          y: {
-            beginAtZero: true,
-            title: {
-              display: true,
-              text: 'Risk %'
-            }
-          }
-        }
-      }
-    });
-  </script>
-<section id="coordination">
-  <h2>🤝 Volunteer & NGO Coordination</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Volunteer</th>
-        <th>Skill</th>
-        <th>Assigned Area</th>
-        <th>Partner NGO</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Amit</td>
-        <td>First Aid</td>
-        <td>Kothrud</td>
-        <td>Relief Pune</td>
-        <td><span style="color: green;">✔️ Deployed</span></td>
-      </tr>
-      <tr>
-        <td>Sneha</td>
-        <td>Food Distribution</td>
-        <td>Hadapsar</td>
-        <td>Hope Foundation</td>
-        <td><span style="color: orange;">⏳ In Progress</span></td>
-      </tr>
-    </tbody>
-  </table>
-</section>
-    
+</div>
+  
+  <h1>🌍 Disaster Relief Report</h1>
 
-
-
-
-
-  <h1>🌍 Sending Your Location...</h1>
-  <div id="status">
-    <div>
-      <p>Longitude: <%= data.lon %></p>
-      <p>Latitude: <%= data.lat %></p>
-      <p>Country: <%= data.country %></p>
-      <p>Region: <%= data.region %></p>
-      <p>City: <%= data.city %></p>
-
-      <!-- Download PDF Button -->
-      <div class="download-btn-container">
-        <button class="download-btn" onclick="downloadPDF()">📄 Download Report as PDF</button>
+  <div id="reportContainer">
+    <div id="status">
+      <div>
+        <!-- 📍 Location Info -->
+        <h2 style="color:#1e3a8a;">📍 Location Details</h2>
+        <p><strong>City:</strong> <%= data.city %></p>
+        <p><strong>Region:</strong> <%= data.region %></p>
+        <p><strong>Country:</strong> <%= data.country %></p>
+        <p><strong>Latitude:</strong> <%= data.lat %></p>
+        <p><strong>Longitude:</strong> <%= data.lon %></p>
+  
+        <!-- 📝 Important Notice -->
+        <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border-left: 5px solid #ffc107; border-radius: 8px;">
+          ⚠️ <strong>Important:</strong> This report is auto-generated using real-time data from weather forecasts, news, and social media to assist in flood disaster planning and emergency response.
+        </div>
+  
+        <!-- 📄 PDF Button -->
+        <div class="download-btn-container">
+          <button class="download-btn" onclick="downloadPDF()">📄 Download Report as PDF</button>
+        </div>
+  
+        <!-- 🤖 Gemini Report -->
+        <div class="gemini-output">
+          <%- jdata %>
+        </div>
       </div>
-
-      <!-- Disaster Analysis Report -->
-      <div class="gemini-output">
-        <%- jdata %>
-      </div>
-
     </div>
   </div>
+  
 
-  <!-- html2pdf Library -->
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-  <!-- PDF Generation Script -->
   <script>
     function downloadPDF() {
       const element = document.querySelector('.gemini-output');
 
       const opt = {
         margin:       0.5,
-        filename:     'Pune_Flood_Disaster_Analysis.pdf',
+        filename:     'Disaster_Relief_Report.pdf',
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2 },
         jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
@@ -269,5 +271,7 @@
       html2pdf().set(opt).from(element).save();
     }
   </script>
+
+
 </body>
 </html>

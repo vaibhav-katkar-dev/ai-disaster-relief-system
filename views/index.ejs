@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emergency Aid Now</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="/style/bot.css">
     <style>
      body, html {
       margin: 0;
@@ -218,9 +219,374 @@
       margin-top: 20px;
       color: #b0b0b0;
     }
+    /* Floating Bot Container */
+#floating-bot {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+
+
+    margin-right: 40px;
+    z-index: 1000;
+}
+
+/* Bot Icon */
+#bot-icon {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #4A90E2, #0084FF);
+    color: white;
+    border-radius: 50%;
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+    /* z-index: 1000; */
+
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    animation: floaty 3s ease-in-out infinite alternate;
+}
+
+/* Hover Effect - Bot Moves Slightly */
+#bot-icon:hover {
+    transform: scale(1.1) translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Chat Box */
+#bot-chat {
+    width: 300px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: absolute;
+    bottom: 70px;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+/* Show Chat Animation */
+#bot-chat.active {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Chat Header */
+#bot-header {
+    background: #4A90E2;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#close-bot {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Chat Messages */
+#bot-messages {
+    padding: 10px;
+    height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Bot & User Messages */
+.bot-text, .user-text {
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 75%;
+    margin-bottom: 8px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.bot-text {
+    background: #f1f1f1;
+    align-self: flex-start;
+}
+
+.user-text {
+    background: #0084FF;
+    color: white;
+    align-self: flex-end;
+}
+
+/* Typing Indicator */
+.typing {
+    background: #f1f1f1;
+    font-style: italic;
+}
+
+/* Input Field */
+#bot-input {
+    display: flex;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+#user-message {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+#send-message {
+    background: #4A90E2;
+    color: white;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    margin-left: 5px;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Hide Chat Initially */
+.hidden {
+    display: none;
+}
+
+/* Floating Animation */
+@keyframes floaty {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-3.5px);
+    }
+}
+
+/* Fade-In Effect */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Floating Bot */
+#floating-bot {
+    position: fixed;
+    bottom: 10px;
+    right: 50px;
+    margin: 10px;
+    border-radius: 50%;
+   display: flex;
+
+   justify-content: center;
+    z-index: 1000;
+    /* opacity: 0.5; */
+ 
+}
+dotlottie-player{
+    max-width:300px;
+    /* border: 50%; */
+    /* opacity: 1; */
+}
+
+/* Bot Icon */
+#bot-icon {
+    width: 40px;
+    max-height: 60px;
+    background: linear-gradient(135deg, #4A90E2, #0084FF);
+    color: white;
+    border-radius: 50%;
+    font-size: 30px;
+    /* opacity: 1; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 10px;
+    position: fixed;
+    bottom: 0px;
+    right: 0px;
+    position: fixed;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease-in-out, bottom 0.5s ease-in-out;
+}
+
+#bot-icon:hover {
+    transform: scale(1.1);
+}
+
+/* Chat Box */
+#bot-chat {
+    height: 70%;
+    width: 700px;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: fixed;
+    bottom: 110px;
+    right: 165px;
+    display: none;
+    flex-direction: column;
+    font-family: Arial, sans-serif;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+
+/* Show Class for Animation */
+#bot-chat.show {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Chat Header */
+#bot-header {
+    background: #4A90E2;
+    color: white;
+    padding: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+#close-bot {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Chat Messages */
+#bot-messages {
+    padding: 10px;
+    height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.bot-text {
+    background: #f1f1f1;
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 75%;
+    margin-bottom: 8px;
+}
+
+.user-text {
+    background: #0084FF;
+    color: white;
+    align-self: flex-end;
+}
+
+/* Input Field */
+#bot-input {
+    display: flex;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+#user-message {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+#send-message {
+    background: #4A90E2;
+    color: white;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    margin-left: 5px;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Hide Chat Initially */
+.hidden {
+    display: none;
+}
+
+
+/* Bot Icon with Lottie Animation */
+#bot-icon {
+    width: 70px;
+    height: 100px;
+    border-radius: 50%;
+    position: relative; /* Ensures layering */
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgb(0, 174, 255);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    animation: floaty 3s ease-in-out infinite alternate;
+    background: transparent; /* Removes background */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+
+/* Clickable overlay to fix Lottie blocking clicks */
+#bot-icon::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: 50%;
+    background: transparent;
+    z-index: 2; /* Ensures clicks go through */
+}
+
+/* Ensure Lottie animation fits well */
+#bot-icon dotlottie-player {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    z-index: 1; /* Keeps Lottie behind the overlay */
+}
+
+
+.bot-text{
+    color: black;
+    text-align: start;
+}
+
+
     </style>
     <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://lottie.host/2ff7cd10-1494-4861-840a-89b7b2197564/VPVjGQtPNT.lottie">
+
 </head>
 <body>
     <div class="header">
@@ -230,7 +596,11 @@
             <a href="/reqHelp">Request Help</a>
             <a href="/offHelp">Offer Help</a>
             <a href="/dashboard">Dashboard</a>
-            <button class="login-btn">Login</button>
+            <a href="/api/risk/predict-risk">Risk Zones</a>
+            <a href="/location">Get Report</a>
+
+
+            <!-- <button class="login-btn">Login</button> -->
         </div>
     </div>
 
@@ -323,7 +693,7 @@
             <a href="/">Home</a>
             <a href="reqhelo">Request Help</a>
             <a href="offhelp">Offer Help</a>
-            <a href="/">Admin Dashboard</a>
+            <a href="/dashbord">Admin Dashboard</a>
         </div>
         <div class="footer-section">
             <h3>Resources</h3>
@@ -343,6 +713,30 @@
         </div>
     </div>
     
+    <div id="floating-bot">
+      <div id="bot-icon">
+          <script src="https://unpkg.com/@dotlottie/player-component@2.7.12/dist/dotlottie-player.mjs"
+              type="module"></script>
+
+          <dotlottie-player src="https://lottie.host/2ff7cd10-1494-4861-840a-89b7b2197564/VPVjGQtPNT.lottie"
+              background="transparent" speed="1" style="width: 300px; height: 300px" loop autoplay>
+
+          </dotlottie-player>
+      </div>
+
+      <div id="bot-chat" class="hidden">
+          <div id="bot-header">
+              <span>AI Bot</span>
+              <button id="close-bot">&times;</button>
+          </div>
+          <div id="bot-messages">
+              <p class="bot-text">Hello! How can I help you?</p>
+          </div>
+          <div id="bot-input">
+              <input type="text" id="user-message" placeholder="Ask me anything...">
+              <button id="send-message">➤</button>
+          </div>
+      </div>
 
 <!-- Leaflet JS -->
 <script>
@@ -435,12 +829,150 @@
 </script>
 <script>
     // Embedded JS
-    function toggleFullscreen() {
-      const map = document.getElementById("disasterMap");
-      document.body.classList.toggle("fullscreen-map");
-      map.classList.toggle("fullscreen");
+    document.addEventListener("DOMContentLoaded", () => {
+    // 🟢 Ensure Chatbox Opens and Closes Properly
+    const botIcon = document.getElementById("bot-icon");
+    const botChat = document.getElementById("bot-chat");
+    const closeBot = document.getElementById("close-bot");
+    const sendMessage = document.getElementById("send-message");
+    const userMessageInput = document.getElementById("user-message-input");
+    const botMessages = document.getElementById("bot-messages");
+
+    // 🟢 Open/Close Chatbox
+    botIcon.addEventListener("click", () => {
+        botChat.classList.toggle("show");
+    });
+
+    closeBot.addEventListener("click", () => {
+        botChat.classList.remove("show");
+    });
+
+    // 🟢 Close on Click Outside
+    document.addEventListener("click", (event) => {
+        if (!botChat.contains(event.target) && event.target !== botIcon) {
+            botChat.classList.remove("show");
+        }
+    });
+
+    // 🟢 Handle Sending Messages
+    sendMessage.addEventListener("click", sendUserMessage);
+    userMessageInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            sendUserMessage();
+        }
+    });
+
+    async function sendUserMessage() {
+        const userMessage = userMessageInput.value.trim();
+        if (!userMessage.replace(/\s/g, "").length) return;
+
+        appendMessage(userMessage, ["user-text"]);
+        userMessageInput.value = "";
+
+        const typingIndicator = appendMessage("Thinking...", ["bot-text", "typing"]);
+
+        try {
+            const botResponse = await getAIResponse(userMessage);
+
+            typingIndicator.remove();
+            appendMessage(botResponse, ["bot-text"]);
+        } catch (error) {
+            console.error("❌ Error:", error);
+            typingIndicator.remove();
+            appendMessage("Something went wrong, please try again.", ["bot-text", "error-text"]);
+        }
     }
+
+    function appendMessage(message, classNames = []) {
+        const messageElement = document.createElement("p");
+        messageElement.textContent = message;
+        classNames.forEach(className => messageElement.classList.add(className));
+        botMessages.appendChild(messageElement);
+        botMessages.scrollTop = botMessages.scrollHeight;
+        return messageElement;
+    }
+
+    async function getAIResponse(userMessage) {
+        try {
+            console.log("Sending request:", { userMessage });
+
+            const response = await fetch("/api/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userMessage })  // No need for userSession
+            });
+
+            if (!response.ok) throw new Error(`HTTP Error! Status: ${response.status}`);
+
+            const data = await response.json();
+            console.log("🟢 AI Response:", data);
+
+            return data.response || "I'm not sure, could you clarify? 🤔";
+        } catch (error) {
+            console.error("❌ Failed to fetch AI response:", error);
+            return "Something went wrong, please try again.";
+        }
+    }
+});
+
+      app.post('/api/chat', async (req, res) => {
+    try {
+        const { userMessage } = req.body; // Accept user message
+        if (!userMessage) {
+            return res.status(400).json({ error: "Message is required" });
+        }
+
+        // Initialize message stack for "guest" or user identification can be managed if needed
+        const userId = 'guest';  // or any dynamic user identifier
+        
+        if (!messageStack[userId]) {
+            messageStack[userId] = [];
+        }
+
+        // Store user messages
+        messageStack[userId].push(userMessage);
+
+        // Limit stack size to avoid memory overload
+        if (messageStack[userId].length > 5) {
+            messageStack[userId].shift(); // Remove the oldest message
+        }
+
+        const conversationHistory = messageStack[userId]
+            .map((msg, index) => `#${index + 1}: ${msg}`)
+            .join("\n");
+
+        const aiPrompt = `
+🆘 **Disaster Relief Helper Bot**
+
+🧑‍💼 **User ID**: ${userId}
+💬 **Recent Queries**:
+${conversationHistory}
+
+📌 **Instructions**:
+- Answer like a trained disaster response assistant.
+- Help users find resources: food, shelter, medicine, volunteer help.
+- Ask location or emergency type if needed.
+- Use calm, clear, helpful language.
+- Respond as if helping during an actual disaster.
+
+🤖 **Response**:
+`;
+
+        // Get response from the AI service
+        const botResponse = await getAIResponse(aiPrompt);
+
+        // Send back the AI response
+        res.json({ response: botResponse });
+
+    } catch (error) {
+        console.error("❌ Chat Route Error:", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
+
   </script>
+
 
 </body>
 </html>
