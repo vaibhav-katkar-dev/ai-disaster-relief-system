@@ -13,7 +13,7 @@ const app = express();
 const parser = new Parser({ headers: { 'User-Agent': 'Mozilla/5.0 (AI-Relief-Agent)' } });
 const nodemailer = require("nodemailer");
 
-mongoose.connect("mongodb://127.0.0.1:27017/disasterHelp2", {
+mongoose.connect("mongodb://127.0.0.1:27017/dh", {
   useNewUrlParser: true,
   useUnifiedTopology: true
 });
@@ -424,3 +424,66 @@ _Last updated: ${new Date().toLocaleString()}_
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running at http://localhost:${PORT}`));
+
+const API_KEY = "AIzaSyAyEmH1mZmanVJQNI8oes_Vj3DbxG9hDpE"; // Replace with your actual key
+
+// In-memory stack for storing user messages per request
+let messageStack = {};
+
+// Handle chat message requests
+app.post('/api/chat', async (req, res) => {
+    try {
+        const { userMessage } = req.body; // Accept user message
+        if (!userMessage) {
+            return res.status(400).json({ error: "Message is required" });
+        }
+
+        // Generate a unique ID for this user (e.g., IP, random ID, or just use a generic)
+        const userId = 'guest'; // Or generate dynamically, e.g., random UUID, IP-based, etc.
+
+        // Initialize stack for user if not exists
+        if (!messageStack[userId]) {
+            messageStack[userId] = [];
+        }
+
+        // Push current message into user message stack
+        messageStack[userId].push(userMessage);
+
+        // Optionally, limit stack size to the last 5 messages to prevent overload
+        if (messageStack[userId].length > 5) {
+            messageStack[userId].shift(); // Remove the oldest message
+        }
+
+        // Prepare the AI prompt with all previous messages
+        const conversationHistory = messageStack[userId]
+            .map((msg, index) => `#${index + 1}: ${msg}`)
+            .join("\n");
+
+        const aiPrompt = `
+🆘 **Disaster Relief Helper Bot**
+
+🧑‍💼 **User ID**: ${userId}
+💬 **Recent Queries**:
+${conversationHistory}
+
+📌 **Instructions**:
+- Answer like a trained disaster response assistant.
+- Help users find resources: food, shelter, medicine, volunteer help.
+- Ask location or emergency type if needed.
+- Use calm, clear, helpful language.
+- Respond as if helping during an actual disaster.
+
+🤖 **Response**:
+`;
+
+        // Get the response from the AI
+        const botResponse = await getAIResponse(aiPrompt);
+
+        // Return the AI response
+        res.json({ response: botResponse });
+
+    } catch (error) {
+        console.error("❌ Chat Route Error:", error.message);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});
